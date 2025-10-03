@@ -1,38 +1,27 @@
-# Binaries
+# Build artifacts
+ioc-labs-server
 *.exe
-*.dll
-*.so
-*.dylib
 bin/
 dist/
 
-# Go
-*.test
-*.out
-vendor/
-go.work
+# Deployment temp
+deploy-temp/
 
-# Environment
+# SSH keys
+*.pem
+*.key
+
+# Environment files
 .env
 .env.local
-
-# Database
-*.db
-*.sqlite
-
-# Logs
-*.log
-logs/
-
-# OS
-.DS_Store
-Thumbs.db
 
 # IDE
 .vscode/
 .idea/
-*.swp
 
-# Temp
-tmp/
-temp/
+# OS
+.DS_Store
+
+# Database
+*.db
+*.sqlite
