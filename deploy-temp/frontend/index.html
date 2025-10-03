@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IOC Labs - Quality Assured</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
+            color: #ffffff;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ffffff 0%, #999999 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .tagline {
+            font-size: 0.8rem;
+            color: #888;
+            margin-top: 0.2rem;
+        }
+
+        .nav {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-link {
+            color: #fff;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .nav-link:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .cart-badge {
+            background: #ff4444;
+            color: white;
+            border-radius: 50%;
+            padding: 0.2rem 0.5rem;
+            font-size: 0.8rem;
+            margin-left: 0.5rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .hero {
+            text-align: center;
+            padding: 4rem 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #ffffff 0%, #999999 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            color: #888;
+        }
+
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .product-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: all 0.3s;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            cursor: pointer;
+        }
+
+        .product-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .product-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+
+        .product-name {
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .product-category {
+            color: #888;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .product-price {
+            font-size: 1.5rem;
+            color: #4CAF50;
+            margin: 1rem 0;
+        }
+
+        .product-stock {
+            color: #888;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+
+        .btn {
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+            font-weight: 600;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #1a1a1a;
+            padding: 2rem;
+            border-radius: 12px;
+            max-width: 500px;
+            width: 90%;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .modal-header {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #ccc;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.8rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            color: white;
+            font-size: 1rem;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #4CAF50;
+        }
+
+        .cart-item {
+            display: flex;
+            gap: 1rem;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            align-items: center;
+        }
+
+        .cart-item-image {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 6px;
+        }
+
+        .cart-item-details {
+            flex: 1;
+        }
+
+        .cart-total {
+            font-size: 1.5rem;
+            margin: 2rem 0;
+            text-align: right;
+        }
+
+        .success-message {
+            background: rgba(76, 175, 80, 0.2);
+            color: #4CAF50;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            border: 1px solid rgba(76, 175, 80, 0.3);
+        }
+
+        .error-message {
+            background: rgba(244, 67, 54, 0.2);
+            color: #f44336;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            border: 1px solid rgba(244, 67, 54, 0.3);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .order-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .status-badge {
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            background: rgba(76, 175, 80, 0.2);
+            color: #4CAF50;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div>
+            <div class="logo">IOC LABS</div>
+            <div class="tagline">Quality Assured</div>
+        </div>
+        <div class="nav">
+            <span class="nav-link" onclick="showProducts()">Products</span>
+            <span class="nav-link" onclick="showCart()" id="cartLink">
+                Cart<span class="cart-badge" id="cartCount">0</span>
+            </span>
+            <span class="nav-link" onclick="showOrders()" id="ordersLink" style="display:none;">Orders</span>
+            <span class="nav-link" onclick="showAuth()" id="authLink">Login</span>
+            <span class="nav-link" onclick="logout()" id="logoutLink" style="display:none;">Logout</span>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Hero Section -->
+        <div class="hero" id="heroSection">
+            <h1>Welcome to IOC Labs</h1>
+            <p>Premium electronics and clothing with quality assurance</p>
+        </div>
+
+        <!-- Products Section -->
+        <div id="productsSection">
+            <h2 style="margin-bottom: 2rem;">Our Products</h2>
+            <div class="products-grid" id="productsGrid"></div>
+        </div>
+
+        <!-- Cart Section -->
+        <div id="cartSection" class="hidden">
+            <h2>Your Cart</h2>
+            <div id="cartItems"></div>
+            <div class="cart-total" id="cartTotal"></div>
+            <button class="btn btn-primary" onclick="checkout()">Checkout</button>
+        </div>
+
+        <!-- Orders Section -->
+        <div id="ordersSection" class="hidden">
+            <h2>Your Orders</h2>
+            <div id="ordersList"></div>
+        </div>
+    </div>
+
+    <!-- Auth Modal -->
+    <div class="modal" id="authModal">
+        <div class="modal-content">
+            <div class="modal-header">Login / Register</div>
+            <div id="authMessage"></div>
+            
+            <div class="form-group">
+                <label class="form-label">Email</label>
+                <input type="email" class="form-input" id="authEmail" placeholder="your@email.com">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Password</label>
+                <input type="password" class="form-input" id="authPassword" placeholder="Min 8 characters">
+            </div>
+            
+            <div class="form-group" id="nameFields" style="display:none;">
+                <label class="form-label">First Name</label>
+                <input type="text" class="form-input" id="authFirstName">
+                
+                <label class="form-label" style="margin-top:1rem;">Last Name</label>
+                <input type="text" class="form-input" id="authLastName">
+            </div>
+            
+            <button class="btn btn-primary" onclick="handleAuth()" id="authSubmit">Login</button>
+            <button class="btn btn-secondary" onclick="toggleAuthMode()" id="authToggle" style="margin-top:1rem;">Need an account? Register</button>
+            <button class="btn btn-secondary" onclick="closeModal('authModal')" style="margin-top:1rem;">Cancel</button>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8080/api';
+        let token = localStorage.getItem('token');
+        let currentUser = JSON.parse(localStorage.getItem('user') || 'null');
+        let isRegisterMode = false;
+        let cart = [];
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            if (token) {
+                updateAuthUI(true);
+                loadCart();
+            }
+            loadProducts();
+        });
+
+        // Auth Functions
+        function showAuth() {
+            document.getElementById('authModal').classList.add('active');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        function toggleAuthMode() {
+            isRegisterMode = !isRegisterMode;
+            const nameFields = document.getElementById('nameFields');
+            const authSubmit = document.getElementById('authSubmit');
+            const authToggle = document.getElementById('authToggle');
+            
+            if (isRegisterMode) {
+                nameFields.style.display = 'block';
+                authSubmit.textContent = 'Register';
+                authToggle.textContent = 'Have an account? Login';
+            } else {
+                nameFields.style.display = 'none';
+                authSubmit.textContent = 'Login';
+                authToggle.textContent = 'Need an account? Register';
+            }
+        }
+
+        async function handleAuth() {
+            const email = document.getElementById('authEmail').value;
+            const password = document.getElementById('authPassword').value;
+            const endpoint = isRegisterMode ? '/register' : '/login';
+            
+            const body = { email, password };
+            
+            if (isRegisterMode) {
+                body.first_name = document.getElementById('authFirstName').value;
+                body.last_name = document.getElementById('authLastName').value;
+            }
+            
+            try {
+                const response = await fetch(API_URL + endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    token = data.data.token;
+                    currentUser = data.data.user;
+                    localStorage.setItem('token', token);
+                    localStorage.setItem('user', JSON.stringify(currentUser));
+                    updateAuthUI(true);
+                    closeModal('authModal');
+                    showMessage('authMessage', 'Success!', 'success');
+                    loadCart();
+                } else {
+                    showMessage('authMessage', data.error.message, 'error');
+                }
+            } catch (error) {
+                showMessage('authMessage', 'Connection failed', 'error');
+            }
+        }
+
+        function logout() {
+            token = null;
+            currentUser = null;
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            cart = [];
+            updateAuthUI(false);
+            updateCartCount();
+            showProducts();
+        }
+
+        function updateAuthUI(loggedIn) {
+            document.getElementById('authLink').style.display = loggedIn ? 'none' : 'inline';
+            document.getElementById('logoutLink').style.display = loggedIn ? 'inline' : 'none';
+            document.getElementById('ordersLink').style.display = loggedIn ? 'inline' : 'none';
+        }
+
+        // Products Functions
+        async function loadProducts() {
+            try {
+                const response = await fetch(API_URL + '/products');
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayProducts(data.data.products);
+                }
+            } catch (error) {
+                console.error('Failed to load products', error);
+            }
+        }
+
+        function displayProducts(products) {
+            const grid = document.getElementById('productsGrid');
+            grid.innerHTML = products.map(product => `
+                <div class="product-card">
+                    <img src="${product.image_url}" alt="${product.name}" class="product-image">
+                    <div class="product-category">${product.category}</div>
+                    <div class="product-name">${product.name}</div>
+                    <div class="product-price">$${product.price.toFixed(2)}</div>
+                    <div class="product-stock">Stock: ${product.stock}</div>
+                    <button class="btn btn-primary" onclick="addToCart(${product.id})">Add to Cart</button>
+                </div>
+            `).join('');
+        }
+
+        // Cart Functions
+        async function addToCart(productId) {
+            if (!token) {
+                showAuth();
+                return;
+            }
+            
+            try {
+                const response = await fetch(API_URL + '/cart/add', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ product_id: productId, quantity: 1 })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    loadCart();
+                    alert('Added to cart!');
+                }
+            } catch (error) {
+                console.error('Failed to add to cart', error);
+            }
+        }
+
+        async function loadCart() {
+            if (!token) return;
+            
+            try {
+                const response = await fetch(API_URL + '/cart', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    cart = data.data.items || [];
+                    updateCartCount();
+                }
+            } catch (error) {
+                console.error('Failed to load cart', error);
+            }
+        }
+
+        function updateCartCount() {
+            document.getElementById('cartCount').textContent = cart.length;
+        }
+
+        function showCart() {
+            if (!token) {
+                showAuth();
+                return;
+            }
+            
+            hideAllSections();
+            document.getElementById('cartSection').classList.remove('hidden');
+            
+            const cartItems = document.getElementById('cartItems');
+            const cartTotal = document.getElementById('cartTotal');
+            
+            if (cart.length === 0) {
+                cartItems.innerHTML = '<p style="text-align:center;padding:2rem;color:#888;">Your cart is empty</p>';
+                cartTotal.innerHTML = '';
+                return;
+            }
+            
+            cartItems.innerHTML = cart.map(item => `
+                <div class="cart-item">
+                    <img src="${item.image_url}" class="cart-item-image">
+                    <div class="cart-item-details">
+                        <div>${item.name}</div>
+                        <div style="color:#888;">Quantity: ${item.quantity}</div>
+                        <div style="color:#4CAF50;">$${item.subtotal.toFixed(2)}</div>
+                    </div>
+                    <button class="btn btn-secondary" onclick="removeFromCart(${item.id})">Remove</button>
+                </div>
+            `).join('');
+            
+            const total = cart.reduce((sum, item) => sum + item.subtotal, 0);
+            cartTotal.innerHTML = `Total: <span style="color:#4CAF50;">$${total.toFixed(2)}</span>`;
+        }
+
+        async function removeFromCart(itemId) {
+            try {
+                await fetch(API_URL + `/cart/remove/${itemId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                await loadCart();
+                showCart();
+            } catch (error) {
+                console.error('Failed to remove item', error);
+            }
+        }
+
+        async function checkout() {
+            try {
+                const response = await fetch(API_URL + '/orders', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('Order placed successfully!');
+                    await loadCart();
+                    showOrders();
+                }
+            } catch (error) {
+                console.error('Checkout failed', error);
+            }
+        }
+
+        // Orders Functions
+        async function showOrders() {
+            if (!token) {
+                showAuth();
+                return;
+            }
+            
+            hideAllSections();
+            document.getElementById('ordersSection').classList.remove('hidden');
+            
+            try {
+                const response = await fetch(API_URL + '/orders', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayOrders(data.data);
+                }
+            } catch (error) {
+                console.error('Failed to load orders', error);
+            }
+        }
+
+        function displayOrders(orders) {
+            const ordersList = document.getElementById('ordersList');
+            
+            if (orders.length === 0) {
+                ordersList.innerHTML = '<p style="text-align:center;padding:2rem;color:#888;">No orders yet</p>';
+                return;
+            }
+            
+            ordersList.innerHTML = orders.map(order => `
+                <div class="order-card">
+                    <div class="order-header">
+                        <div>Order #${order.id}</div>
+                        <div class="status-badge">${order.status}</div>
+                    </div>
+                    <div style="color:#888;margin-bottom:0.5rem;">${new Date(order.created_at).toLocaleDateString()}</div>
+                    <div style="font-size:1.2rem;color:#4CAF50;">Total: $${order.total.toFixed(2)}</div>
+                </div>
+            `).join('');
+        }
+
+        // Navigation
+        function showProducts() {
+            hideAllSections();
+            document.getElementById('heroSection').style.display = 'block';
+            document.getElementById('productsSection').classList.remove('hidden');
+            loadProducts();
+        }
+
+        function hideAllSections() {
+            document.getElementById('heroSection').style.display = 'none';
+            document.getElementById('productsSection').classList.add('hidden');
+            document.getElementById('cartSection').classList.add('hidden');
+            document.getElementById('ordersSection').classList.add('hidden');
+        }
+
+        // Utilities
+        function showMessage(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="${type}-message">${message}</div>`;
+            setTimeout(() => element.innerHTML = '', 3000);
+        }
+    </script>
+</body>
+</html>
