@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>IOC Labs - Quality Assured</title>
+    <script src="https://js.stripe.com/v3/"></script>
     <style>
         * {
             margin: 0;
@@ -304,8 +305,33 @@
             padding: 0.3rem 0.8rem;
             border-radius: 20px;
             font-size: 0.9rem;
+        }
+
+        .status-pending {
+            background: rgba(255, 193, 7, 0.2);
+            color: #ffc107;
+        }
+
+        .status-paid {
             background: rgba(76, 175, 80, 0.2);
             color: #4CAF50;
+        }
+
+        #payment-element {
+            margin: 1.5rem 0;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+        }
+
+        .payment-amount {
+            background: rgba(76, 175, 80, 0.2);
+            color: #4CAF50;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+            text-align: center;
         }
     </style>
 </head>
@@ -346,7 +372,7 @@
             <h2>Your Cart</h2>
             <div id="cartItems"></div>
             <div class="cart-total" id="cartTotal"></div>
-            <button class="btn btn-primary" onclick="checkout()">Checkout</button>
+            <button class="btn btn-primary" onclick="checkout()">Proceed to Checkout</button>
         </div>
 
         <!-- Orders Section -->
@@ -361,37 +387,54 @@
         <div class="modal-content">
             <div class="modal-header">Login / Register</div>
             <div id="authMessage"></div>
-            
+
             <div class="form-group">
                 <label class="form-label">Email</label>
                 <input type="email" class="form-input" id="authEmail" placeholder="your@email.com">
             </div>
-            
+
             <div class="form-group">
                 <label class="form-label">Password</label>
-                <input type="password" class="form-input" id="authPassword" placeholder="Min 8 characters">
+                <input type="password" class="form-input" id="authPassword" placeholder="Enter password">
             </div>
-            
-            <div class="form-group" id="nameFields" style="display:none;">
-                <label class="form-label">First Name</label>
-                <input type="text" class="form-input" id="authFirstName">
-                
-                <label class="form-label" style="margin-top:1rem;">Last Name</label>
-                <input type="text" class="form-input" id="authLastName">
+
+            <div class="form-group" id="nameField" style="display:none;">
+                <label class="form-label">Full Name</label>
+                <input type="text" class="form-input" id="authFullName">
             </div>
-            
+
             <button class="btn btn-primary" onclick="handleAuth()" id="authSubmit">Login</button>
             <button class="btn btn-secondary" onclick="toggleAuthMode()" id="authToggle" style="margin-top:1rem;">Need an account? Register</button>
             <button class="btn btn-secondary" onclick="closeModal('authModal')" style="margin-top:1rem;">Cancel</button>
         </div>
     </div>
 
+    <!-- Payment Modal -->
+    <div class="modal" id="paymentModal">
+        <div class="modal-content">
+            <div class="modal-header">Secure Payment</div>
+            <div id="paymentMessage"></div>
+            
+            <div class="payment-amount">
+                Amount: $<span id="paymentAmount">0.00</span>
+            </div>
+
+            <div id="payment-element"></div>
+
+            <button class="btn btn-primary" id="submitPayment" style="margin-top:1.5rem;">Pay Now</button>
+            <button class="btn btn-secondary" onclick="closeModal('paymentModal')" style="margin-top:1rem;">Cancel</button>
+        </div>
+    </div>
+
     <script>
-        const API_URL = 'http://localhost:8080/api';
+        const API_URL = 'http://ioc-labs-alb-265805501.us-east-1.elb.amazonaws.com/api';
+        const STRIPE_PK = 'pk_test_51SEIxg37EyDyYeJpsDhtYNwhq5JZx9LCnQZuyqqBKbW3WrxBBAofrOuN4muUYCig7RnxaQjgoEYDP6r9GtHLBwDJ00mYVctSH0';
+        const stripe = Stripe(STRIPE_PK);
+        
         let token = localStorage.getItem('token');
-        let currentUser = JSON.parse(localStorage.getItem('user') || 'null');
         let isRegisterMode = false;
         let cart = [];
+        let elements, paymentElement;
 
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
@@ -413,16 +456,16 @@
 
         function toggleAuthMode() {
             isRegisterMode = !isRegisterMode;
-            const nameFields = document.getElementById('nameFields');
+            const nameField = document.getElementById('nameField');
             const authSubmit = document.getElementById('authSubmit');
             const authToggle = document.getElementById('authToggle');
-            
+
             if (isRegisterMode) {
-                nameFields.style.display = 'block';
+                nameField.style.display = 'block';
                 authSubmit.textContent = 'Register';
                 authToggle.textContent = 'Have an account? Login';
             } else {
-                nameFields.style.display = 'none';
+                nameField.style.display = 'none';
                 authSubmit.textContent = 'Login';
                 authToggle.textContent = 'Need an account? Register';
             }
@@ -431,29 +474,25 @@
         async function handleAuth() {
             const email = document.getElementById('authEmail').value;
             const password = document.getElementById('authPassword').value;
-            const endpoint = isRegisterMode ? '/register' : '/login';
-            
+            const endpoint = isRegisterMode ? '/auth/register' : '/auth/login';
+
             const body = { email, password };
-            
             if (isRegisterMode) {
-                body.first_name = document.getElementById('authFirstName').value;
-                body.last_name = document.getElementById('authLastName').value;
+                body.full_name = document.getElementById('authFullName').value;
             }
-            
+
             try {
                 const response = await fetch(API_URL + endpoint, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(body)
                 });
-                
+
                 const data = await response.json();
-                
+
                 if (data.success) {
                     token = data.data.token;
-                    currentUser = data.data.user;
                     localStorage.setItem('token', token);
-                    localStorage.setItem('user', JSON.stringify(currentUser));
                     updateAuthUI(true);
                     closeModal('authModal');
                     showMessage('authMessage', 'Success!', 'success');
@@ -468,9 +507,7 @@
 
         function logout() {
             token = null;
-            currentUser = null;
             localStorage.removeItem('token');
-            localStorage.removeItem('user');
             cart = [];
             updateAuthUI(false);
             updateCartCount();
@@ -486,9 +523,9 @@
         // Products Functions
         async function loadProducts() {
             try {
-                const response = await fetch(API_URL + '/products');
+                const response = await fetch(API_URL + '/products?per_page=50');
                 const data = await response.json();
-                
+
                 if (data.success) {
                     displayProducts(data.data.products);
                 }
@@ -517,9 +554,9 @@
                 showAuth();
                 return;
             }
-            
+
             try {
-                const response = await fetch(API_URL + '/cart/add', {
+                const response = await fetch(API_URL + '/cart', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -527,12 +564,11 @@
                     },
                     body: JSON.stringify({ product_id: productId, quantity: 1 })
                 });
-                
+
                 const data = await response.json();
-                
                 if (data.success) {
                     loadCart();
-                    alert('Added to cart!');
+                    showMessage('', 'Added to cart!', 'success');
                 }
             } catch (error) {
                 console.error('Failed to add to cart', error);
@@ -541,14 +577,13 @@
 
         async function loadCart() {
             if (!token) return;
-            
+
             try {
                 const response = await fetch(API_URL + '/cart', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
-                
+
                 const data = await response.json();
-                
                 if (data.success) {
                     cart = data.data.items || [];
                     updateCartCount();
@@ -567,19 +602,19 @@
                 showAuth();
                 return;
             }
-            
+
             hideAllSections();
             document.getElementById('cartSection').classList.remove('hidden');
-            
+
             const cartItems = document.getElementById('cartItems');
             const cartTotal = document.getElementById('cartTotal');
-            
+
             if (cart.length === 0) {
                 cartItems.innerHTML = '<p style="text-align:center;padding:2rem;color:#888;">Your cart is empty</p>';
                 cartTotal.innerHTML = '';
                 return;
             }
-            
+
             cartItems.innerHTML = cart.map(item => `
                 <div class="cart-item">
                     <img src="${item.image_url}" class="cart-item-image">
@@ -588,42 +623,79 @@
                         <div style="color:#888;">Quantity: ${item.quantity}</div>
                         <div style="color:#4CAF50;">$${item.subtotal.toFixed(2)}</div>
                     </div>
-                    <button class="btn btn-secondary" onclick="removeFromCart(${item.id})">Remove</button>
                 </div>
             `).join('');
-            
+
             const total = cart.reduce((sum, item) => sum + item.subtotal, 0);
             cartTotal.innerHTML = `Total: <span style="color:#4CAF50;">$${total.toFixed(2)}</span>`;
         }
 
-        async function removeFromCart(itemId) {
-            try {
-                await fetch(API_URL + `/cart/remove/${itemId}`, {
-                    method: 'DELETE',
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                
-                await loadCart();
-                showCart();
-            } catch (error) {
-                console.error('Failed to remove item', error);
-            }
-        }
-
         async function checkout() {
+            if (!token || cart.length === 0) return;
+
             try {
-                const response = await fetch(API_URL + '/orders', {
+                // Create order
+                const orderResponse = await fetch(API_URL + '/orders', {
                     method: 'POST',
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    alert('Order placed successfully!');
-                    await loadCart();
-                    showOrders();
+
+                const orderData = await orderResponse.json();
+                if (!orderData.success) {
+                    showMessage('', orderData.error.message, 'error');
+                    return;
                 }
+
+                const orderId = orderData.data.id;
+                const orderTotal = orderData.data.total;
+
+                // Create payment intent
+                const paymentResponse = await fetch(API_URL + '/payment/create-intent', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ order_id: orderId })
+                });
+
+                const paymentData = await paymentResponse.json();
+                if (!paymentData.success) {
+                    showMessage('', 'Payment setup failed', 'error');
+                    return;
+                }
+
+                // Show payment modal
+                document.getElementById('paymentAmount').textContent = orderTotal.toFixed(2);
+                document.getElementById('paymentModal').classList.add('active');
+
+                // Initialize Stripe Elements
+                elements = stripe.elements({ clientSecret: paymentData.data.client_secret });
+                paymentElement = elements.create('payment');
+                paymentElement.mount('#payment-element');
+
+                // Handle payment submission
+                document.getElementById('submitPayment').onclick = async () => {
+                    const btn = document.getElementById('submitPayment');
+                    btn.disabled = true;
+                    btn.textContent = 'Processing...';
+
+                    const { error } = await stripe.confirmPayment({
+                        elements,
+                        redirect: 'if_required'
+                    });
+
+                    if (error) {
+                        showMessage('paymentMessage', 'Payment failed: ' + error.message, 'error');
+                        btn.disabled = false;
+                        btn.textContent = 'Pay Now';
+                    } else {
+                        showMessage('paymentMessage', 'Payment successful!', 'success');
+                        closeModal('paymentModal');
+                        await loadCart();
+                        showOrders();
+                    }
+                };
             } catch (error) {
                 console.error('Checkout failed', error);
             }
@@ -635,17 +707,16 @@
                 showAuth();
                 return;
             }
-            
+
             hideAllSections();
             document.getElementById('ordersSection').classList.remove('hidden');
-            
+
             try {
                 const response = await fetch(API_URL + '/orders', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
-                
+
                 const data = await response.json();
-                
                 if (data.success) {
                     displayOrders(data.data);
                 }
@@ -656,18 +727,19 @@
 
         function displayOrders(orders) {
             const ordersList = document.getElementById('ordersList');
-            
+
             if (orders.length === 0) {
                 ordersList.innerHTML = '<p style="text-align:center;padding:2rem;color:#888;">No orders yet</p>';
                 return;
             }
-            
+
             ordersList.innerHTML = orders.map(order => `
                 <div class="order-card">
                     <div class="order-header">
                         <div>Order #${order.id}</div>
-                        <div class="status-badge">${order.status}</div>
+                        <div class="status-badge status-${order.status}">${order.status}</div>
                     </div>
+                    <div style="color:#888;margin-bottom:0.5rem;">Payment: <span class="status-${order.payment_status || 'pending'}">${order.payment_status || 'pending'}</span></div>
                     <div style="color:#888;margin-bottom:0.5rem;">${new Date(order.created_at).toLocaleDateString()}</div>
                     <div style="font-size:1.2rem;color:#4CAF50;">Total: $${order.total.toFixed(2)}</div>
                 </div>
@@ -691,9 +763,23 @@
 
         // Utilities
         function showMessage(elementId, message, type) {
+            if (!elementId) {
+                const alert = document.createElement('div');
+                alert.className = type + '-message';
+                alert.textContent = message;
+                alert.style.position = 'fixed';
+                alert.style.top = '100px';
+                alert.style.right = '20px';
+                alert.style.zIndex = '10000';
+                document.body.appendChild(alert);
+                setTimeout(() => alert.remove(), 3000);
+                return;
+            }
             const element = document.getElementById(elementId);
-            element.innerHTML = `<div class="${type}-message">${message}</div>`;
-            setTimeout(() => element.innerHTML = '', 3000);
+            if (element) {
+                element.innerHTML = `<div class="${type}-message">${message}</div>`;
+                setTimeout(() => element.innerHTML = '', 3000);
+            }
         }
     </script>
 </body>
