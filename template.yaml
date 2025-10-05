@@ -1,0 +1,764 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: IOC Labs E-Commerce - Stage 3 with AWS Cognito
+
+# ============================================================================
+# PARAMETERS
+# ============================================================================
+Parameters:
+  Environment:
+    Type: String
+    Default: prod
+    AllowedValues:
+      - dev
+      - staging
+      - prod
+    Description: Environment name
+  
+  StripeSecretKey:
+    Type: String
+    NoEcho: true
+    Description: Stripe secret key (test mode)
+  
+  StripePublishableKey:
+    Type: String
+    Description: Stripe publishable key (test mode)
+  
+  StripeWebhookSecret:
+    Type: String
+    NoEcho: true
+    Description: Stripe webhook signing secret
+
+# ============================================================================
+# GLOBALS
+# ============================================================================
+Globals:
+  Function:
+    Runtime: provided.al2
+    MemorySize: 256
+    Timeout: 15
+    Tracing: Active
+    Environment:
+      Variables:
+        DYNAMODB_TABLE: !Ref ECommerceTable
+        ENVIRONMENT: !Ref Environment
+    Tags:
+      Project: ioc-labs-ecommerce
+      Environment: !Ref Environment
+      Stage: '3'
+
+  Api:
+    Cors:
+      AllowMethods: "'GET,POST,PUT,DELETE,OPTIONS'"
+      AllowHeaders: "'Content-Type,Authorization'"
+      AllowOrigin: "'*'"
+    TracingEnabled: true
+
+# ============================================================================
+# RESOURCES
+# ============================================================================
+Resources:
+
+  # ==========================================================================
+  # COGNITO USER POOL
+  # ==========================================================================
+  UserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: !Sub ioc-labs-users-${Environment}
+      
+      # Username/Email Configuration
+      UsernameAttributes:
+        - email
+      UsernameConfiguration:
+        CaseSensitive: false
+      
+      # Auto-verify email addresses
+      AutoVerifiedAttributes:
+        - email
+      
+      # Password Policy
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+          RequireUppercase: true
+          RequireLowercase: true
+          RequireNumbers: true
+          RequireSymbols: true
+          TemporaryPasswordValidityDays: 7
+      
+      # User Attributes Schema
+      Schema:
+        - Name: email
+          AttributeDataType: String
+          Required: true
+          Mutable: false
+        - Name: given_name
+          AttributeDataType: String
+          Required: false
+          Mutable: true
+        - Name: family_name
+          AttributeDataType: String
+          Required: false
+          Mutable: true
+        - Name: phone_number
+          AttributeDataType: String
+          Required: false
+          Mutable: true
+      
+      # Account Recovery
+      AccountRecoverySetting:
+        RecoveryMechanisms:
+          - Name: verified_email
+            Priority: 1
+      
+      # Email Configuration
+      EmailConfiguration:
+        EmailSendingAccount: COGNITO_DEFAULT
+      
+      # Verification Message Template
+      VerificationMessageTemplate:
+        DefaultEmailOption: CONFIRM_WITH_CODE
+        EmailMessage: 'Welcome to IOC Labs E-Commerce! Your verification code is {####}'
+        EmailSubject: 'Verify your email address'
+      
+      # User Invitation Template
+      AdminCreateUserConfig:
+        AllowAdminCreateUserOnly: false
+        InviteMessageTemplate:
+          EmailMessage: 'Welcome to IOC Labs! Your username is {username} and temporary password is {####}'
+          EmailSubject: 'Welcome to IOC Labs E-Commerce'
+      
+      # MFA Configuration (Optional)
+      MfaConfiguration: OPTIONAL
+      EnabledMfas:
+        - SOFTWARE_TOKEN_MFA
+        - SMS_MFA
+      
+      # Advanced Security
+      UserPoolAddOns:
+        AdvancedSecurityMode: ENFORCED
+      
+      # Tags
+      UserPoolTags:
+        Environment: !Ref Environment
+        Project: ioc-labs-ecommerce
+
+  # User Pool Client (for web/mobile apps)
+  UserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      ClientName: !Sub ioc-labs-web-client-${Environment}
+      UserPoolId: !Ref UserPool
+      
+      # Don't generate secret for JavaScript SPAs
+      GenerateSecret: false
+      
+      # Refresh token validity
+      RefreshTokenValidity: 30
+      
+      # Auth flows
+      ExplicitAuthFlows:
+        - ALLOW_USER_PASSWORD_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
+        - ALLOW_USER_SRP_AUTH
+      
+      # Token Validity
+      TokenValidityUnits:
+        IdToken: hours
+        AccessToken: hours
+        RefreshToken: days
+      
+      IdTokenValidity: 1
+      AccessTokenValidity: 1
+      
+      # Prevent user enumeration attacks
+      PreventUserExistenceErrors: ENABLED
+      
+      # Allowed OAuth flows (for social login, if needed later)
+      AllowedOAuthFlows:
+        - code
+        - implicit
+      AllowedOAuthScopes:
+        - email
+        - openid
+        - profile
+      AllowedOAuthFlowsUserPoolClient: true
+      
+      # Callback URLs (update with your CloudFront URL)
+      CallbackURLs:
+        - http://localhost:3000
+        - !Sub 'https://${FrontendDistribution.DomainName}'
+      
+      LogoutURLs:
+        - http://localhost:3000
+        - !Sub 'https://${FrontendDistribution.DomainName}'
+      
+      # Read/Write Attributes
+      ReadAttributes:
+        - email
+        - email_verified
+        - given_name
+        - family_name
+        - phone_number
+      WriteAttributes:
+        - given_name
+        - family_name
+        - phone_number
+
+  # User Pool Domain (for Hosted UI)
+  UserPoolDomain:
+    Type: AWS::Cognito::UserPoolDomain
+    Properties:
+      Domain: !Sub ioc-labs-${Environment}-${AWS::AccountId}
+      UserPoolId: !Ref UserPool
+
+  # ==========================================================================
+  # DYNAMODB TABLE
+  # ==========================================================================
+  ECommerceTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub ioc-labs-ecommerce-${Environment}
+      BillingMode: PAY_PER_REQUEST
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      SSESpecification:
+        SSEEnabled: true
+        SSEType: KMS
+      StreamSpecification:
+        StreamViewType: NEW_AND_OLD_IMAGES
+      TimeToLiveSpecification:
+        Enabled: true
+        AttributeName: TTL
+      
+      AttributeDefinitions:
+        - AttributeName: PK
+          AttributeType: S
+        - AttributeName: SK
+          AttributeType: S
+        - AttributeName: GSI1PK
+          AttributeType: S
+        - AttributeName: GSI1SK
+          AttributeType: S
+        - AttributeName: GSI2PK
+          AttributeType: S
+        - AttributeName: GSI2SK
+          AttributeType: S
+      
+      KeySchema:
+        - AttributeName: PK
+          KeyType: HASH
+        - AttributeName: SK
+          KeyType: RANGE
+      
+      GlobalSecondaryIndexes:
+        - IndexName: GSI1
+          KeySchema:
+            - AttributeName: GSI1PK
+              KeyType: HASH
+            - AttributeName: GSI1SK
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+        - IndexName: GSI2
+          KeySchema:
+            - AttributeName: GSI2PK
+              KeyType: HASH
+            - AttributeName: GSI2SK
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+      
+      Tags:
+        - Key: Project
+          Value: ioc-labs-ecommerce
+        - Key: Environment
+          Value: !Ref Environment
+
+  # ==========================================================================
+  # SECRETS MANAGER
+  # ==========================================================================
+  StripeSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: !Sub ioc-labs/stripe/${Environment}
+      Description: Stripe API credentials
+      SecretString: !Sub |
+        {
+          "secret_key": "${StripeSecretKey}",
+          "publishable_key": "${StripePublishableKey}",
+          "webhook_secret": "${StripeWebhookSecret}"
+        }
+
+  # ==========================================================================
+  # S3 BUCKETS
+  # ==========================================================================
+  FrontendBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub ioc-labs-frontend-${Environment}-${AWS::AccountId}
+      VersioningConfiguration:
+        Status: Enabled
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      Tags:
+        - Key: Project
+          Value: ioc-labs-ecommerce
+        - Key: Environment
+          Value: !Ref Environment
+
+  ImagesBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub ioc-labs-images-${Environment}-${AWS::AccountId}
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      Tags:
+        - Key: Project
+          Value: ioc-labs-ecommerce
+        - Key: Environment
+          Value: !Ref Environment
+
+  FrontendBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref FrontendBucket
+      PolicyDocument:
+        Statement:
+          - Sid: AllowCloudFrontOAC
+            Effect: Allow
+            Principal:
+              Service: cloudfront.amazonaws.com
+            Action: s3:GetObject
+            Resource: !Sub ${FrontendBucket.Arn}/*
+            Condition:
+              StringEquals:
+                AWS:SourceArn: !Sub arn:aws:cloudfront::${AWS::AccountId}:distribution/${FrontendDistribution}
+
+  ImagesBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref ImagesBucket
+      PolicyDocument:
+        Statement:
+          - Sid: AllowCloudFrontOAC
+            Effect: Allow
+            Principal:
+              Service: cloudfront.amazonaws.com
+            Action: s3:GetObject
+            Resource: !Sub ${ImagesBucket.Arn}/*
+            Condition:
+              StringEquals:
+                AWS:SourceArn: !Sub arn:aws:cloudfront::${AWS::AccountId}:distribution/${ImagesDistribution}
+
+  # ==========================================================================
+  # CLOUDFRONT
+  # ==========================================================================
+  CloudFrontOAC:
+    Type: AWS::CloudFront::OriginAccessControl
+    Properties:
+      OriginAccessControlConfig:
+        Name: !Sub ioc-labs-frontend-oac-${Environment}
+        OriginAccessControlOriginType: s3
+        SigningBehavior: always
+        SigningProtocol: sigv4
+
+  FrontendDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        HttpVersion: http2and3
+        Comment: !Sub IOC Labs Frontend - ${Environment}
+        DefaultRootObject: index.html
+        PriceClass: PriceClass_100
+        
+        Origins:
+          - Id: S3Origin
+            DomainName: !GetAtt FrontendBucket.RegionalDomainName
+            OriginAccessControlId: !Ref CloudFrontOAC
+            S3OriginConfig: {}
+        
+        DefaultCacheBehavior:
+          TargetOriginId: S3Origin
+          ViewerProtocolPolicy: redirect-to-https
+          AllowedMethods: [GET, HEAD, OPTIONS]
+          CachedMethods: [GET, HEAD]
+          Compress: true
+          CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6
+          OriginRequestPolicyId: 88a5eaf4-2fd4-4709-b370-b4c650ea3fcf
+        
+        CustomErrorResponses:
+          - ErrorCode: 404
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+          - ErrorCode: 403
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+
+  ImagesDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        HttpVersion: http2and3
+        Comment: !Sub IOC Labs Product Images - ${Environment}
+        PriceClass: PriceClass_100
+        
+        Origins:
+          - Id: S3Origin
+            DomainName: !GetAtt ImagesBucket.RegionalDomainName
+            OriginAccessControlId: !Ref CloudFrontOAC
+            S3OriginConfig: {}
+        
+        DefaultCacheBehavior:
+          TargetOriginId: S3Origin
+          ViewerProtocolPolicy: redirect-to-https
+          AllowedMethods: [GET, HEAD, OPTIONS]
+          CachedMethods: [GET, HEAD]
+          Compress: true
+          CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6
+
+  # ==========================================================================
+  # API GATEWAY WITH COGNITO AUTHORIZER
+  # ==========================================================================
+  ECommerceApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: !Sub ioc-labs-api-${Environment}
+      StageName: !Ref Environment
+      TracingEnabled: true
+      
+      # Cognito Authorizer
+      Auth:
+        DefaultAuthorizer: CognitoAuthorizer
+        Authorizers:
+          CognitoAuthorizer:
+            UserPoolArn: !GetAtt UserPool.Arn
+            Identity:
+              Header: Authorization
+              ReauthorizeEvery: 300
+      
+      # CORS
+      Cors:
+        AllowMethods: "'GET,POST,PUT,DELETE,OPTIONS'"
+        AllowHeaders: "'Content-Type,Authorization'"
+        AllowOrigin: "'*'"
+      
+      # Throttling
+      MethodSettings:
+        - ResourcePath: "/*"
+          HttpMethod: "*"
+          ThrottlingBurstLimit: 5000
+          ThrottlingRateLimit: 10000
+
+  # ==========================================================================
+  # LAMBDA FUNCTIONS - PRODUCTS (Public endpoints)
+  # ==========================================================================
+  ListProductsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ioc-labs-list-products-${Environment}
+      CodeUri: ./functions/list-products/
+      Handler: bootstrap
+      MemorySize: 512
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref ECommerceTable
+      Events:
+        ListProductsApi:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ECommerceApi
+            Path: /products
+            Method: GET
+            Auth:
+              Authorizer: NONE
+
+  GetProductFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ioc-labs-get-product-${Environment}
+      CodeUri: ./functions/get-product/
+      Handler: bootstrap
+      Timeout: 5
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref ECommerceTable
+      Events:
+        GetProductApi:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ECommerceApi
+            Path: /products/{id}
+            Method: GET
+            Auth:
+              Authorizer: NONE
+
+  SearchProductsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ioc-labs-search-products-${Environment}
+      CodeUri: ./functions/search-products/
+      Handler: bootstrap
+      MemorySize: 512
+      Timeout: 20
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref ECommerceTable
+      Events:
+        SearchProductsApi:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ECommerceApi
+            Path: /products/search
+            Method: GET
+            Auth:
+              Authorizer: NONE
+
+  # ==========================================================================
+  # LAMBDA FUNCTIONS - CART (Protected by Cognito)
+  # ==========================================================================
+  GetCartFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ioc-labs-get-cart-${Environment}
+      CodeUri: ./functions/get-cart/
+      Handler: bootstrap
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref ECommerceTable
+      Events:
+        GetCartApi:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ECommerceApi
+            Path: /cart
+            Method: GET
+
+  AddToCartFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ioc-labs-add-to-cart-${Environment}
+      CodeUri: ./functions/add-to-cart/
+      Handler: bootstrap
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ECommerceTable
+      Events:
+        AddToCartApi:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ECommerceApi
+            Path: /cart
+            Method: POST
+
+  ClearCartFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ioc-labs-clear-cart-${Environment}
+      CodeUri: ./functions/clear-cart/
+      Handler: bootstrap
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ECommerceTable
+      Events:
+        ClearCartApi:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ECommerceApi
+            Path: /cart/clear
+            Method: DELETE
+
+  # ==========================================================================
+  # LAMBDA FUNCTIONS - ORDERS (Protected by Cognito)
+  # ==========================================================================
+  CreateOrderFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ioc-labs-create-order-${Environment}
+      CodeUri: ./functions/create-order/
+      Handler: bootstrap
+      MemorySize: 512
+      Timeout: 30
+      Environment:
+        Variables:
+          STRIPE_SECRET_ARN: !Ref StripeSecret
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ECommerceTable
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action: secretsmanager:GetSecretValue
+              Resource: !Ref StripeSecret
+      Events:
+        CreateOrderApi:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ECommerceApi
+            Path: /orders
+            Method: POST
+
+  ListOrdersFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ioc-labs-list-orders-${Environment}
+      CodeUri: ./functions/list-orders/
+      Handler: bootstrap
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref ECommerceTable
+      Events:
+        ListOrdersApi:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ECommerceApi
+            Path: /orders
+            Method: GET
+
+  GetOrderFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ioc-labs-get-order-${Environment}
+      CodeUri: ./functions/get-order/
+      Handler: bootstrap
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref ECommerceTable
+      Events:
+        GetOrderApi:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ECommerceApi
+            Path: /orders/{id}
+            Method: GET
+
+  # ==========================================================================
+  # LAMBDA FUNCTIONS - PAYMENT (Protected by Cognito)
+  # ==========================================================================
+  CreatePaymentIntentFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ioc-labs-create-payment-intent-${Environment}
+      CodeUri: ./functions/create-payment-intent/
+      Handler: bootstrap
+      Environment:
+        Variables:
+          STRIPE_SECRET_ARN: !Ref StripeSecret
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref ECommerceTable
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action: secretsmanager:GetSecretValue
+              Resource: !Ref StripeSecret
+      Events:
+        CreatePaymentIntentApi:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ECommerceApi
+            Path: /payment/create-intent
+            Method: POST
+
+  WebhookHandlerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ioc-labs-webhook-handler-${Environment}
+      CodeUri: ./functions/webhook-handler/
+      Handler: bootstrap
+      Timeout: 20
+      Environment:
+        Variables:
+          STRIPE_SECRET_ARN: !Ref StripeSecret
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ECommerceTable
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action: secretsmanager:GetSecretValue
+              Resource: !Ref StripeSecret
+      Events:
+        WebhookApi:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ECommerceApi
+            Path: /webhook/stripe
+            Method: POST
+            Auth:
+              Authorizer: NONE
+
+# ============================================================================
+# OUTPUTS
+# ============================================================================
+Outputs:
+  UserPoolId:
+    Description: Cognito User Pool ID
+    Value: !Ref UserPool
+    Export:
+      Name: !Sub ${AWS::StackName}-UserPoolId
+
+  UserPoolClientId:
+    Description: Cognito User Pool Client ID
+    Value: !Ref UserPoolClient
+    Export:
+      Name: !Sub ${AWS::StackName}-UserPoolClientId
+
+  UserPoolDomain:
+    Description: Cognito Hosted UI Domain
+    Value: !Sub ${UserPoolDomain}.auth.${AWS::Region}.amazoncognito.com
+    Export:
+      Name: !Sub ${AWS::StackName}-UserPoolDomain
+
+  ApiUrl:
+    Description: API Gateway endpoint URL
+    Value: !Sub https://${ECommerceApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}
+    Export:
+      Name: !Sub ${AWS::StackName}-ApiUrl
+
+  FrontendDistributionUrl:
+    Description: CloudFront URL for frontend
+    Value: !GetAtt FrontendDistribution.DomainName
+    Export:
+      Name: !Sub ${AWS::StackName}-FrontendUrl
+
+  ImagesDistributionUrl:
+    Description: CloudFront URL for product images
+    Value: !GetAtt ImagesDistribution.DomainName
+    Export:
+      Name: !Sub ${AWS::StackName}-ImagesUrl
+
+  DynamoDBTableName:
+    Description: DynamoDB table name
+    Value: !Ref ECommerceTable
+    Export:
+      Name: !Sub ${AWS::StackName}-TableName
+
+  FrontendBucketName:
+    Description: S3 bucket for frontend
+    Value: !Ref FrontendBucket
+    Export:
+      Name: !Sub ${AWS::StackName}-FrontendBucket
+
+  ImagesBucketName:
+    Description: S3 bucket for product images
+    Value: !Ref ImagesBucket
+    Export:
+      Name: !Sub ${AWS::StackName}-ImagesBucket

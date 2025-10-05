@@ -1,0 +1,462 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: IOC Labs E-Commerce - Stage 3 Serverless (Custom JWT Auth)
+Parameters:
+  Environment:
+    Type: String
+    Default: prod
+  StripeSecretKey:
+    Type: String
+    NoEcho: true
+  StripePublishableKey:
+    Type: String
+  StripeWebhookSecret:
+    Type: String
+    NoEcho: true
+Globals:
+  Function:
+    Runtime: provided.al2
+    MemorySize: 256
+    Timeout: 15
+    Tracing: Active
+    Environment:
+      Variables:
+        DYNAMODB_TABLE:
+          Ref: ECommerceTable
+        ENVIRONMENT:
+          Ref: Environment
+        JWT_SECRET_ARN:
+          Ref: JWTSecret
+Resources:
+  ECommerceTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName:
+        Fn::Sub: ioc-labs-ecommerce-${Environment}
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+      - AttributeName: PK
+        AttributeType: S
+      - AttributeName: SK
+        AttributeType: S
+      - AttributeName: GSI1PK
+        AttributeType: S
+      - AttributeName: GSI1SK
+        AttributeType: S
+      - AttributeName: GSI2PK
+        AttributeType: S
+      - AttributeName: GSI2SK
+        AttributeType: S
+      KeySchema:
+      - AttributeName: PK
+        KeyType: HASH
+      - AttributeName: SK
+        KeyType: RANGE
+      GlobalSecondaryIndexes:
+      - IndexName: GSI1
+        KeySchema:
+        - AttributeName: GSI1PK
+          KeyType: HASH
+        - AttributeName: GSI1SK
+          KeyType: RANGE
+        Projection:
+          ProjectionType: ALL
+      - IndexName: GSI2
+        KeySchema:
+        - AttributeName: GSI2PK
+          KeyType: HASH
+        - AttributeName: GSI2SK
+          KeyType: RANGE
+        Projection:
+          ProjectionType: ALL
+      StreamSpecification:
+        StreamViewType: NEW_AND_OLD_IMAGES
+      TimeToLiveSpecification:
+        Enabled: true
+        AttributeName: TTL
+  JWTSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name:
+        Fn::Sub: ioc-labs/jwt/${Environment}
+      SecretString:
+        Fn::Sub: "{\n  \"signing_key\": \"change-this-to-a-secure-256-bit-key-in-production\"\
+          \n}\n"
+  StripeSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name:
+        Fn::Sub: ioc-labs/stripe/${Environment}
+      SecretString:
+        Fn::Sub: "{\n  \"secret_key\": \"${StripeSecretKey}\",\n  \"publishable_key\"\
+          : \"${StripePublishableKey}\",\n  \"webhook_secret\": \"${StripeWebhookSecret}\"\
+          \n}\n"
+  ECommerceApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name:
+        Fn::Sub: ioc-labs-api-${Environment}
+      StageName:
+        Ref: Environment
+      Cors:
+        AllowMethods: '''GET,POST,PUT,DELETE,OPTIONS'''
+        AllowHeaders: '''Content-Type,Authorization,X-Requested-With'''
+        AllowOrigin: '''*'''
+        MaxAge: '''600'''
+        AllowCredentials: false
+      Auth:
+        DefaultAuthorizer: JWTAuthorizer
+        Authorizers:
+          JWTAuthorizer:
+            FunctionArn:
+              Fn::GetAtt:
+              - JWTAuthorizerFunction
+              - Arn
+  RegisterUserFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName:
+        Fn::Sub: ioc-labs-register-user-${Environment}
+      CodeUri: RegisterUserFunction
+      Handler: bootstrap
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: ECommerceTable
+      Events:
+        RegisterApi:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: ECommerceApi
+            Path: /auth/register
+            Method: POST
+            Auth:
+              Authorizer: NONE
+    Metadata:
+      SamResourceId: RegisterUserFunction
+  LoginUserFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName:
+        Fn::Sub: ioc-labs-login-user-${Environment}
+      CodeUri: LoginUserFunction
+      Handler: bootstrap
+      Policies:
+      - DynamoDBReadPolicy:
+          TableName:
+            Ref: ECommerceTable
+      - Statement:
+        - Effect: Allow
+          Action: secretsmanager:GetSecretValue
+          Resource:
+            Ref: JWTSecret
+      Events:
+        LoginApi:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: ECommerceApi
+            Path: /auth/login
+            Method: POST
+            Auth:
+              Authorizer: NONE
+    Metadata:
+      SamResourceId: LoginUserFunction
+  JWTAuthorizerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName:
+        Fn::Sub: ioc-labs-jwt-authorizer-${Environment}
+      CodeUri: JWTAuthorizerFunction
+      Handler: bootstrap
+      MemorySize: 128
+      Timeout: 5
+      Policies:
+      - Statement:
+        - Effect: Allow
+          Action: secretsmanager:GetSecretValue
+          Resource:
+            Ref: JWTSecret
+    Metadata:
+      SamResourceId: JWTAuthorizerFunction
+  ListProductsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName:
+        Fn::Sub: ioc-labs-list-products-${Environment}
+      CodeUri: ListProductsFunction
+      Handler: bootstrap
+      MemorySize: 512
+      Policies:
+      - DynamoDBReadPolicy:
+          TableName:
+            Ref: ECommerceTable
+      Events:
+        ListProductsApi:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: ECommerceApi
+            Path: /products
+            Method: GET
+            Auth:
+              Authorizer: NONE
+    Metadata:
+      SamResourceId: ListProductsFunction
+  GetProductFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName:
+        Fn::Sub: ioc-labs-get-product-${Environment}
+      CodeUri: GetProductFunction
+      Handler: bootstrap
+      Timeout: 5
+      Policies:
+      - DynamoDBReadPolicy:
+          TableName:
+            Ref: ECommerceTable
+      Events:
+        GetProductApi:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: ECommerceApi
+            Path: /products/{id}
+            Method: GET
+            Auth:
+              Authorizer: NONE
+    Metadata:
+      SamResourceId: GetProductFunction
+  SearchProductsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName:
+        Fn::Sub: ioc-labs-search-products-${Environment}
+      CodeUri: SearchProductsFunction
+      Handler: bootstrap
+      MemorySize: 512
+      Timeout: 20
+      Policies:
+      - DynamoDBReadPolicy:
+          TableName:
+            Ref: ECommerceTable
+      Events:
+        SearchProductsApi:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: ECommerceApi
+            Path: /products/search
+            Method: GET
+            Auth:
+              Authorizer: NONE
+    Metadata:
+      SamResourceId: SearchProductsFunction
+  GetCartFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName:
+        Fn::Sub: ioc-labs-get-cart-${Environment}
+      CodeUri: GetCartFunction
+      Handler: bootstrap
+      Policies:
+      - DynamoDBReadPolicy:
+          TableName:
+            Ref: ECommerceTable
+      Events:
+        GetCartApi:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: ECommerceApi
+            Path: /cart
+            Method: GET
+    Metadata:
+      SamResourceId: GetCartFunction
+  AddToCartFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName:
+        Fn::Sub: ioc-labs-add-to-cart-${Environment}
+      CodeUri: AddToCartFunction
+      Handler: bootstrap
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: ECommerceTable
+      Events:
+        AddToCartApi:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: ECommerceApi
+            Path: /cart
+            Method: POST
+    Metadata:
+      SamResourceId: AddToCartFunction
+  ClearCartFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName:
+        Fn::Sub: ioc-labs-clear-cart-${Environment}
+      CodeUri: ClearCartFunction
+      Handler: bootstrap
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: ECommerceTable
+      Events:
+        ClearCartApi:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: ECommerceApi
+            Path: /cart/clear
+            Method: DELETE
+    Metadata:
+      SamResourceId: ClearCartFunction
+  CreateOrderFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName:
+        Fn::Sub: ioc-labs-create-order-${Environment}
+      CodeUri: CreateOrderFunction
+      Handler: bootstrap
+      MemorySize: 512
+      Timeout: 30
+      Environment:
+        Variables:
+          STRIPE_SECRET_ARN:
+            Ref: StripeSecret
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: ECommerceTable
+      - Statement:
+        - Effect: Allow
+          Action: secretsmanager:GetSecretValue
+          Resource:
+            Ref: StripeSecret
+      Events:
+        CreateOrderApi:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: ECommerceApi
+            Path: /orders
+            Method: POST
+    Metadata:
+      SamResourceId: CreateOrderFunction
+  ListOrdersFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName:
+        Fn::Sub: ioc-labs-list-orders-${Environment}
+      CodeUri: ListOrdersFunction
+      Handler: bootstrap
+      Policies:
+      - DynamoDBReadPolicy:
+          TableName:
+            Ref: ECommerceTable
+      Events:
+        ListOrdersApi:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: ECommerceApi
+            Path: /orders
+            Method: GET
+    Metadata:
+      SamResourceId: ListOrdersFunction
+  GetOrderFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName:
+        Fn::Sub: ioc-labs-get-order-${Environment}
+      CodeUri: GetOrderFunction
+      Handler: bootstrap
+      Policies:
+      - DynamoDBReadPolicy:
+          TableName:
+            Ref: ECommerceTable
+      Events:
+        GetOrderApi:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: ECommerceApi
+            Path: /orders/{id}
+            Method: GET
+    Metadata:
+      SamResourceId: GetOrderFunction
+  CreatePaymentIntentFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName:
+        Fn::Sub: ioc-labs-create-payment-intent-${Environment}
+      CodeUri: CreatePaymentIntentFunction
+      Handler: bootstrap
+      Environment:
+        Variables:
+          STRIPE_SECRET_ARN:
+            Ref: StripeSecret
+      Policies:
+      - DynamoDBReadPolicy:
+          TableName:
+            Ref: ECommerceTable
+      - Statement:
+        - Effect: Allow
+          Action: secretsmanager:GetSecretValue
+          Resource:
+            Ref: StripeSecret
+      Events:
+        CreatePaymentIntentApi:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: ECommerceApi
+            Path: /payment/create-intent
+            Method: POST
+    Metadata:
+      SamResourceId: CreatePaymentIntentFunction
+  WebhookHandlerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName:
+        Fn::Sub: ioc-labs-webhook-handler-${Environment}
+      CodeUri: WebhookHandlerFunction
+      Handler: bootstrap
+      Timeout: 20
+      Environment:
+        Variables:
+          STRIPE_SECRET_ARN:
+            Ref: StripeSecret
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: ECommerceTable
+      - Statement:
+        - Effect: Allow
+          Action: secretsmanager:GetSecretValue
+          Resource:
+            Ref: StripeSecret
+      Events:
+        WebhookApi:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: ECommerceApi
+            Path: /webhook/stripe
+            Method: POST
+            Auth:
+              Authorizer: NONE
+    Metadata:
+      SamResourceId: WebhookHandlerFunction
+Outputs:
+  ApiUrl:
+    Value:
+      Fn::Sub: https://${ECommerceApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}
+  DynamoDBTableName:
+    Value:
+      Ref: ECommerceTable

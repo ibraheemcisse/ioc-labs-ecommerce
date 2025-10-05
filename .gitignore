@@ -25,3 +25,4 @@ deploy-temp/
 # Database
 *.db
 *.sqlite
+infrastructure/stage-3-ecs/secrets.env
