@@ -10,7 +10,7 @@ An experimental journey building the same application across four infrastructure
 
 I built identical functionality four times to answer one question: **How do infrastructure choices affect cost, complexity, and capability?**
 
-Each stage ran for approximately 1 day—just long enough to deploy, test, understand, and tear down before moving to the next.
+Each stage ran for approximately 1 day just long enough to deploy, test, understand, and tear down before moving to the next.
 
 ```
 Stage 1: Single EC2 Instance        →  1 day  →  $0.40 in credits
@@ -287,13 +287,6 @@ This is a learning project, so I skipped:
 
 The project isn't claiming Kubernetes is better. It's proving it's not better for single applications. That required building it to verify.
 
-## Blog Posts
-
-I wrote about this journey:
-
-1. **[Building the Same App Four Times: What I Learned About Infrastructure Trade-offs](#)** — The complete 5-day journey (3,000 words)
-2. **[Migrating Across Four Infrastructure Paradigms](#)** — Technical how-to (1,800 words)
-3. **[Load Testing Across 4 Deployments: Where Bottlenecks Actually Were](#)** — Performance analysis (1,500 words)
 
 ## License
 
