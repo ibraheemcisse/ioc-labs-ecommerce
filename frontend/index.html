@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IOC Labs - Quality Assured</title>
+    <title>IOC Labs - Luxury Assured</title>
     <script src="https://js.stripe.com/v3/"></script>
     <style>
         * {
@@ -13,173 +13,407 @@
         }
 
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
-            color: #ffffff;
+            font-family: 'Playfair Display', 'Georgia', serif;
+            background: #0a0a0a;
+            color: #f5f5f5;
             min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Glitter particles */
+        .glitter-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+            overflow: hidden;
+        }
+
+        .glitter {
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            background: #d4af37;
+            border-radius: 50%;
+            opacity: 0;
+            animation: sparkle 3s infinite;
+        }
+
+        @keyframes sparkle {
+            0%, 100% { opacity: 0; transform: scale(0); }
+            50% { opacity: 1; transform: scale(1); }
+        }
+
+        /* Gold accent line */
+        .gold-line {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #d4af37, transparent);
+            animation: shimmer 3s infinite;
+            z-index: 101;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
         }
 
         .header {
-            background: rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.95);
             backdrop-filter: blur(10px);
-            padding: 1rem 2rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 1.5rem 3rem;
+            border-bottom: 1px solid #d4af37;
             display: flex;
             justify-content: space-between;
             align-items: center;
             position: sticky;
             top: 0;
             z-index: 100;
+            box-shadow: 0 4px 20px rgba(212, 175, 55, 0.1);
         }
 
         .logo {
-            font-size: 1.5rem;
+            font-size: 2rem;
             font-weight: 700;
-            background: linear-gradient(135deg, #ffffff 0%, #999999 100%);
+            background: linear-gradient(135deg, #d4af37 0%, #f4e5b8 50%, #d4af37 100%);
+            background-size: 200% auto;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            animation: goldShine 3s linear infinite;
+            letter-spacing: 3px;
+        }
+
+        @keyframes goldShine {
+            to { background-position: 200% center; }
         }
 
         .tagline {
-            font-size: 0.8rem;
-            color: #888;
-            margin-top: 0.2rem;
+            font-size: 0.75rem;
+            color: #d4af37;
+            margin-top: 0.3rem;
+            letter-spacing: 2px;
+            font-family: 'Courier New', monospace;
         }
 
         .nav {
             display: flex;
-            gap: 2rem;
+            gap: 2.5rem;
             align-items: center;
         }
 
         .nav-link {
-            color: #fff;
+            color: #f5f5f5;
             text-decoration: none;
-            padding: 0.5rem 1rem;
-            border-radius: 6px;
-            transition: all 0.3s;
+            padding: 0.7rem 1.3rem;
+            border-radius: 8px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             cursor: pointer;
+            position: relative;
+            border: 1px solid transparent;
+            font-size: 0.95rem;
+            letter-spacing: 1px;
         }
 
         .nav-link:hover {
-            background: rgba(255, 255, 255, 0.1);
+            border-color: #d4af37;
+            background: rgba(212, 175, 55, 0.1);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.2);
         }
 
         .cart-badge {
-            background: #ff4444;
-            color: white;
+            background: linear-gradient(135deg, #d4af37, #f4e5b8);
+            color: #0a0a0a;
             border-radius: 50%;
-            padding: 0.2rem 0.5rem;
-            font-size: 0.8rem;
+            padding: 0.2rem 0.6rem;
+            font-size: 0.75rem;
             margin-left: 0.5rem;
+            font-weight: 700;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        /* Rabbit mascot */
+        .rabbit-mascot {
+            position: fixed;
+            bottom: 100px;
+            right: -100px;
+            width: 80px;
+            height: 80px;
+            z-index: 9999;
+            opacity: 0;
+            transition: all 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            cursor: pointer;
+        }
+
+        .rabbit-mascot.show {
+            right: 20px;
+            opacity: 1;
+        }
+
+        .rabbit-mascot.nudge {
+            animation: nudgeCart 0.5s ease-in-out 3;
+        }
+
+        @keyframes nudgeCart {
+            0%, 100% { transform: translateX(0) rotate(0deg); }
+            25% { transform: translateX(-10px) rotate(-5deg); }
+            75% { transform: translateX(10px) rotate(5deg); }
+        }
+
+        .rabbit {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        .rabbit-body {
+            width: 50px;
+            height: 60px;
+            background: linear-gradient(135deg, #f5f5f5, #e0e0e0);
+            border-radius: 50% 50% 40% 40%;
+            position: absolute;
+            bottom: 10px;
+            left: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .rabbit-ear {
+            width: 12px;
+            height: 35px;
+            background: linear-gradient(180deg, #f5f5f5, #e0e0e0);
+            border-radius: 50% 50% 20% 20%;
+            position: absolute;
+            top: 0;
+        }
+
+        .rabbit-ear.left { left: 22px; transform: rotate(-15deg); }
+        .rabbit-ear.right { left: 40px; transform: rotate(15deg); }
+
+        .rabbit-ear-inner {
+            width: 6px;
+            height: 20px;
+            background: #ffc0cb;
+            border-radius: 50%;
+            position: absolute;
+            left: 3px;
+            top: 8px;
+        }
+
+        .rabbit-eye {
+            width: 6px;
+            height: 6px;
+            background: #0a0a0a;
+            border-radius: 50%;
+            position: absolute;
+            top: 25px;
+        }
+
+        .rabbit-eye.left { left: 25px; }
+        .rabbit-eye.right { left: 38px; }
+
+        .rabbit-nose {
+            width: 8px;
+            height: 6px;
+            background: #ffc0cb;
+            border-radius: 50%;
+            position: absolute;
+            bottom: 22px;
+            left: 29px;
+        }
+
+        .rabbit-tail {
+            width: 18px;
+            height: 18px;
+            background: #f5f5f5;
+            border-radius: 50%;
+            position: absolute;
+            bottom: 20px;
+            right: 12px;
+            box-shadow: inset -3px -3px 5px rgba(0,0,0,0.1);
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
-            padding: 2rem;
+            padding: 3rem;
+            position: relative;
+            z-index: 2;
         }
 
         .hero {
             text-align: center;
-            padding: 4rem 2rem;
-            margin-bottom: 3rem;
+            padding: 6rem 2rem;
+            margin-bottom: 4rem;
+            background: radial-gradient(circle at center, rgba(212, 175, 55, 0.05), transparent);
         }
 
         .hero h1 {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-            background: linear-gradient(135deg, #ffffff 0%, #999999 100%);
+            font-size: 4rem;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, #d4af37 0%, #f4e5b8 50%, #d4af37 100%);
+            background-size: 200% auto;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            animation: goldShine 3s linear infinite;
+            letter-spacing: 4px;
+            text-shadow: 0 0 30px rgba(212, 175, 55, 0.3);
         }
 
         .hero p {
-            font-size: 1.2rem;
-            color: #888;
+            font-size: 1.3rem;
+            color: #c0c0c0;
+            letter-spacing: 2px;
+            font-style: italic;
         }
 
         .products-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 2rem;
-            margin-top: 2rem;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 2.5rem;
+            margin-top: 3rem;
         }
 
         .product-card {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 12px;
-            padding: 1.5rem;
-            transition: all 0.3s;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: linear-gradient(145deg, #141414, #0a0a0a);
+            border-radius: 16px;
+            padding: 0;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(212, 175, 55, 0.2);
             cursor: pointer;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .product-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.1), transparent);
+            transition: left 0.5s;
+        }
+
+        .product-card:hover::before {
+            left: 100%;
         }
 
         .product-card:hover {
-            transform: translateY(-5px);
-            background: rgba(255, 255, 255, 0.08);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            transform: translateY(-10px) scale(1.02);
+            border-color: #d4af37;
+            box-shadow: 0 15px 40px rgba(212, 175, 55, 0.3);
         }
 
         .product-image {
             width: 100%;
-            height: 200px;
+            height: 250px;
             object-fit: cover;
-            border-radius: 8px;
-            margin-bottom: 1rem;
+            border-radius: 16px 16px 0 0;
+            transition: transform 0.5s;
+        }
+
+        .product-card:hover .product-image {
+            transform: scale(1.05);
+        }
+
+        .product-content {
+            padding: 1.5rem;
         }
 
         .product-name {
-            font-size: 1.2rem;
+            font-size: 1.3rem;
             margin-bottom: 0.5rem;
+            color: #f5f5f5;
+            letter-spacing: 1px;
         }
 
         .product-category {
-            color: #888;
-            font-size: 0.9rem;
-            margin-bottom: 0.5rem;
+            color: #d4af37;
+            font-size: 0.85rem;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
         }
 
         .product-price {
-            font-size: 1.5rem;
-            color: #4CAF50;
+            font-size: 1.8rem;
+            background: linear-gradient(135deg, #d4af37, #f4e5b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
             margin: 1rem 0;
+            font-weight: 700;
         }
 
         .product-stock {
             color: #888;
             font-size: 0.9rem;
-            margin-bottom: 1rem;
+            margin-bottom: 1.5rem;
         }
 
         .btn {
-            padding: 0.8rem 1.5rem;
+            padding: 1rem 2rem;
             border: none;
-            border-radius: 8px;
+            border-radius: 10px;
             font-size: 1rem;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             width: 100%;
             font-weight: 600;
+            letter-spacing: 1px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .btn:hover::before {
+            width: 300px;
+            height: 300px;
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%);
-            color: white;
+            background: linear-gradient(135deg, #d4af37 0%, #f4e5b8 100%);
+            color: #0a0a0a;
+            border: 2px solid transparent;
         }
 
         .btn-primary:hover {
-            transform: scale(1.05);
-            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.4);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(212, 175, 55, 0.4);
         }
 
         .btn-secondary {
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
+            background: transparent;
+            color: #d4af37;
+            border: 2px solid #d4af37;
         }
 
         .btn-secondary:hover {
-            background: rgba(255, 255, 255, 0.2);
+            background: rgba(212, 175, 55, 0.1);
         }
 
         .modal {
@@ -189,28 +423,46 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.9);
             z-index: 1000;
             align-items: center;
             justify-content: center;
+            backdrop-filter: blur(5px);
         }
 
         .modal.active {
             display: flex;
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
 
         .modal-content {
-            background: #1a1a1a;
-            padding: 2rem;
-            border-radius: 12px;
-            max-width: 500px;
+            background: linear-gradient(145deg, #141414, #0a0a0a);
+            padding: 3rem;
+            border-radius: 16px;
+            max-width: 550px;
             width: 90%;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 2px solid #d4af37;
+            box-shadow: 0 20px 60px rgba(212, 175, 55, 0.3);
+            animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
         }
 
         .modal-header {
-            font-size: 1.5rem;
-            margin-bottom: 1.5rem;
+            font-size: 2rem;
+            margin-bottom: 2rem;
+            background: linear-gradient(135deg, #d4af37, #f4e5b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 2px;
         }
 
         .form-group {
@@ -219,68 +471,86 @@
 
         .form-label {
             display: block;
-            margin-bottom: 0.5rem;
-            color: #ccc;
+            margin-bottom: 0.7rem;
+            color: #d4af37;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
         }
 
         .form-input {
             width: 100%;
-            padding: 0.8rem;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 6px;
-            color: white;
+            padding: 1rem;
+            background: rgba(212, 175, 55, 0.05);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 8px;
+            color: #f5f5f5;
             font-size: 1rem;
+            transition: all 0.3s;
         }
 
         .form-input:focus {
             outline: none;
-            border-color: #4CAF50;
+            border-color: #d4af37;
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.2);
         }
 
         .cart-item {
             display: flex;
-            gap: 1rem;
-            padding: 1rem;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 8px;
-            margin-bottom: 1rem;
+            gap: 1.5rem;
+            padding: 1.5rem;
+            background: linear-gradient(145deg, #141414, #0a0a0a);
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
             align-items: center;
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            transition: all 0.3s;
+        }
+
+        .cart-item:hover {
+            border-color: #d4af37;
+            transform: translateX(5px);
         }
 
         .cart-item-image {
-            width: 80px;
-            height: 80px;
+            width: 100px;
+            height: 100px;
             object-fit: cover;
-            border-radius: 6px;
-        }
-
-        .cart-item-details {
-            flex: 1;
+            border-radius: 8px;
+            border: 2px solid rgba(212, 175, 55, 0.3);
         }
 
         .cart-total {
-            font-size: 1.5rem;
-            margin: 2rem 0;
+            font-size: 2rem;
+            margin: 3rem 0;
             text-align: right;
+            background: linear-gradient(135deg, #d4af37, #f4e5b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
         .success-message {
-            background: rgba(76, 175, 80, 0.2);
-            color: #4CAF50;
-            padding: 1rem;
-            border-radius: 8px;
+            background: rgba(212, 175, 55, 0.2);
+            color: #d4af37;
+            padding: 1.2rem;
+            border-radius: 10px;
             margin-bottom: 1rem;
-            border: 1px solid rgba(76, 175, 80, 0.3);
+            border: 1px solid rgba(212, 175, 55, 0.4);
+            animation: slideIn 0.4s;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(-20px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
         }
 
         .error-message {
-            background: rgba(244, 67, 54, 0.2);
-            color: #f44336;
-            padding: 1rem;
-            border-radius: 8px;
+            background: rgba(220, 53, 69, 0.2);
+            color: #dc3545;
+            padding: 1.2rem;
+            border-radius: 10px;
             margin-bottom: 1rem;
-            border: 1px solid rgba(244, 67, 54, 0.3);
+            border: 1px solid rgba(220, 53, 69, 0.4);
+            animation: slideIn 0.4s;
         }
 
         .hidden {
@@ -288,96 +558,118 @@
         }
 
         .order-card {
-            background: rgba(255, 255, 255, 0.05);
-            padding: 1.5rem;
-            border-radius: 8px;
-            margin-bottom: 1rem;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: linear-gradient(145deg, #141414, #0a0a0a);
+            padding: 2rem;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            transition: all 0.3s;
         }
 
-        .order-header {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 1rem;
+        .order-card:hover {
+            border-color: #d4af37;
+            box-shadow: 0 5px 20px rgba(212, 175, 55, 0.2);
         }
 
         .status-badge {
-            padding: 0.3rem 0.8rem;
+            padding: 0.5rem 1rem;
             border-radius: 20px;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
         }
 
         .status-pending {
             background: rgba(255, 193, 7, 0.2);
             color: #ffc107;
+            border: 1px solid rgba(255, 193, 7, 0.3);
         }
 
         .status-paid {
-            background: rgba(76, 175, 80, 0.2);
-            color: #4CAF50;
+            background: rgba(212, 175, 55, 0.2);
+            color: #d4af37;
+            border: 1px solid rgba(212, 175, 55, 0.3);
         }
 
         #payment-element {
-            margin: 1.5rem 0;
-            padding: 1rem;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 8px;
+            margin: 2rem 0;
+            padding: 1.5rem;
+            background: rgba(212, 175, 55, 0.05);
+            border-radius: 10px;
+            border: 1px solid rgba(212, 175, 55, 0.2);
         }
 
         .payment-amount {
-            background: rgba(76, 175, 80, 0.2);
-            color: #4CAF50;
-            padding: 1rem;
-            border-radius: 8px;
-            margin-bottom: 1rem;
-            font-size: 1.2rem;
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.2), rgba(212, 175, 55, 0.1));
+            color: #d4af37;
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
             text-align: center;
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            letter-spacing: 2px;
         }
     </style>
 </head>
 <body>
+    <!-- Gold accent line -->
+    <div class="gold-line"></div>
+
+    <!-- Glitter particles -->
+    <div class="glitter-container" id="glitterContainer"></div>
+
+    <!-- Rabbit mascot -->
+    <div class="rabbit-mascot" id="rabbitMascot">
+        <div class="rabbit">
+            <div class="rabbit-ear left"><div class="rabbit-ear-inner"></div></div>
+            <div class="rabbit-ear right"><div class="rabbit-ear-inner"></div></div>
+            <div class="rabbit-body">
+                <div class="rabbit-eye left"></div>
+                <div class="rabbit-eye right"></div>
+                <div class="rabbit-nose"></div>
+            </div>
+            <div class="rabbit-tail"></div>
+        </div>
+    </div>
+
     <!-- Header -->
     <div class="header">
         <div>
             <div class="logo">IOC LABS</div>
-            <div class="tagline">Quality Assured</div>
+            <div class="tagline">LUXURY ASSURED</div>
         </div>
         <div class="nav">
-            <span class="nav-link" onclick="showProducts()">Products</span>
+            <span class="nav-link" onclick="showProducts()">PRODUCTS</span>
             <span class="nav-link" onclick="showCart()" id="cartLink">
-                Cart<span class="cart-badge" id="cartCount">0</span>
+                CART<span class="cart-badge" id="cartCount">0</span>
             </span>
-            <span class="nav-link" onclick="showOrders()" id="ordersLink" style="display:none;">Orders</span>
-            <span class="nav-link" onclick="showAuth()" id="authLink">Login</span>
-            <span class="nav-link" onclick="logout()" id="logoutLink" style="display:none;">Logout</span>
+            <span class="nav-link" onclick="showOrders()" id="ordersLink" style="display:none;">ORDERS</span>
+            <span class="nav-link" onclick="showAuth()" id="authLink">LOGIN</span>
+            <span class="nav-link" onclick="logout()" id="logoutLink" style="display:none;">LOGOUT</span>
         </div>
     </div>
 
     <!-- Main Container -->
     <div class="container">
-        <!-- Hero Section -->
         <div class="hero" id="heroSection">
-            <h1>Welcome to IOC Labs</h1>
-            <p>Premium electronics and clothing with quality assurance</p>
+            <h1>IOC LABS</h1>
+            <p>Where Luxury Meets Innovation</p>
         </div>
 
-        <!-- Products Section -->
         <div id="productsSection">
-            <h2 style="margin-bottom: 2rem;">Our Products</h2>
+            <h2 style="margin-bottom: 3rem; text-align: center; color: #d4af37; letter-spacing: 3px; font-size: 2rem;">CURATED COLLECTION</h2>
             <div class="products-grid" id="productsGrid"></div>
         </div>
 
-        <!-- Cart Section -->
         <div id="cartSection" class="hidden">
-            <h2>Your Cart</h2>
+            <h2 style="color: #d4af37; letter-spacing: 2px; margin-bottom: 2rem;">YOUR SELECTIONS</h2>
             <div id="cartItems"></div>
             <div class="cart-total" id="cartTotal"></div>
-            <button class="btn btn-primary" onclick="checkout()">Proceed to Checkout</button>
+            <button class="btn btn-primary" onclick="checkout()">PROCEED TO CHECKOUT</button>
         </div>
 
-        <!-- Orders Section -->
         <div id="ordersSection" class="hidden">
-            <h2>Your Orders</h2>
+            <h2 style="color: #d4af37; letter-spacing: 2px; margin-bottom: 2rem;">YOUR ORDERS</h2>
             <div id="ordersList"></div>
         </div>
     </div>
@@ -385,64 +677,109 @@
     <!-- Auth Modal -->
     <div class="modal" id="authModal">
         <div class="modal-content">
-            <div class="modal-header">Login / Register</div>
+            <div class="modal-header">WELCOME</div>
             <div id="authMessage"></div>
-
             <div class="form-group">
-                <label class="form-label">Email</label>
+                <label class="form-label">EMAIL</label>
                 <input type="email" class="form-input" id="authEmail" placeholder="your@email.com">
             </div>
-
             <div class="form-group">
-                <label class="form-label">Password</label>
+                <label class="form-label">PASSWORD</label>
                 <input type="password" class="form-input" id="authPassword" placeholder="Enter password">
             </div>
-
             <div class="form-group" id="nameField" style="display:none;">
-                <label class="form-label">Full Name</label>
+                <label class="form-label">FULL NAME</label>
                 <input type="text" class="form-input" id="authFullName">
             </div>
-
-            <button class="btn btn-primary" onclick="handleAuth()" id="authSubmit">Login</button>
-            <button class="btn btn-secondary" onclick="toggleAuthMode()" id="authToggle" style="margin-top:1rem;">Need an account? Register</button>
-            <button class="btn btn-secondary" onclick="closeModal('authModal')" style="margin-top:1rem;">Cancel</button>
+            <button class="btn btn-primary" onclick="handleAuth()" id="authSubmit">LOGIN</button>
+            <button class="btn btn-secondary" onclick="toggleAuthMode()" id="authToggle" style="margin-top:1rem;">CREATE ACCOUNT</button>
+            <button class="btn btn-secondary" onclick="closeModal('authModal')" style="margin-top:1rem;">CANCEL</button>
         </div>
     </div>
 
     <!-- Payment Modal -->
     <div class="modal" id="paymentModal">
         <div class="modal-content">
-            <div class="modal-header">Secure Payment</div>
+            <div class="modal-header">SECURE PAYMENT</div>
             <div id="paymentMessage"></div>
-            
             <div class="payment-amount">
-                Amount: $<span id="paymentAmount">0.00</span>
+                TOTAL: $<span id="paymentAmount">0.00</span>
             </div>
-
             <div id="payment-element"></div>
-
-            <button class="btn btn-primary" id="submitPayment" style="margin-top:1.5rem;">Pay Now</button>
-            <button class="btn btn-secondary" onclick="closeModal('paymentModal')" style="margin-top:1rem;">Cancel</button>
+            <button class="btn btn-primary" id="submitPayment" style="margin-top:2rem;">COMPLETE PURCHASE</button>
+            <button class="btn btn-secondary" onclick="closeModal('paymentModal')" style="margin-top:1rem;">CANCEL</button>
         </div>
     </div>
 
     <script>
-        const API_URL = 'http://ioc-labs-alb-265805501.us-east-1.elb.amazonaws.com/api';
+        const API_URL = 'http://3.86.144.250:30080/api';
         const STRIPE_PK = 'pk_test_51SEIxg37EyDyYeJpsDhtYNwhq5JZx9LCnQZuyqqBKbW3WrxBBAofrOuN4muUYCig7RnxaQjgoEYDP6r9GtHLBwDJ00mYVctSH0';
         const stripe = Stripe(STRIPE_PK);
-        
+
         let token = localStorage.getItem('token');
         let isRegisterMode = false;
         let cart = [];
         let elements, paymentElement;
+        let idleTimer;
+        let rabbitShown = false;
 
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
+            createGlitter();
             if (token) {
                 updateAuthUI(true);
                 loadCart();
             }
             loadProducts();
+            startIdleTimer();
+        });
+
+        // Glitter effect
+        function createGlitter() {
+            const container = document.getElementById('glitterContainer');
+            for (let i = 0; i < 30; i++) {
+                const glitter = document.createElement('div');
+                glitter.className = 'glitter';
+                glitter.style.left = Math.random() * 100 + '%';
+                glitter.style.top = Math.random() * 100 + '%';
+                glitter.style.animationDelay = Math.random() * 3 + 's';
+                container.appendChild(glitter);
+            }
+        }
+
+        // Idle detection and rabbit
+        function resetIdleTimer() {
+            clearTimeout(idleTimer);
+            rabbitShown = false;
+            document.getElementById('rabbitMascot').classList.remove('show', 'nudge');
+            startIdleTimer();
+        }
+
+        function startIdleTimer() {
+            idleTimer = setTimeout(() => {
+                if (!rabbitShown) {
+                    showRabbit();
+                    rabbitShown = true;
+                }
+            }, 10000);
+        }
+
+        function showRabbit() {
+            const rabbit = document.getElementById('rabbitMascot');
+            rabbit.classList.add('show');
+            setTimeout(() => {
+                rabbit.classList.add('nudge');
+            }, 500);
+        }
+
+        document.addEventListener('mousemove', resetIdleTimer);
+        document.addEventListener('keypress', resetIdleTimer);
+        document.addEventListener('click', resetIdleTimer);
+        document.addEventListener('scroll', resetIdleTimer);
+
+        document.getElementById('rabbitMascot').addEventListener('click', () => {
+            showCart();
+            resetIdleTimer();
         });
 
         // Auth Functions
@@ -462,12 +799,12 @@
 
             if (isRegisterMode) {
                 nameField.style.display = 'block';
-                authSubmit.textContent = 'Register';
-                authToggle.textContent = 'Have an account? Login';
+                authSubmit.textContent = 'REGISTER';
+                authToggle.textContent = 'HAVE AN ACCOUNT? LOGIN';
             } else {
                 nameField.style.display = 'none';
-                authSubmit.textContent = 'Login';
-                authToggle.textContent = 'Need an account? Register';
+                authSubmit.textContent = 'LOGIN';
+                authToggle.textContent = 'CREATE ACCOUNT';
             }
         }
 
@@ -495,7 +832,7 @@
                     localStorage.setItem('token', token);
                     updateAuthUI(true);
                     closeModal('authModal');
-                    showMessage('authMessage', 'Success!', 'success');
+                    showMessage('authMessage', 'Welcome!', 'success');
                     loadCart();
                 } else {
                     showMessage('authMessage', data.error.message, 'error');
@@ -539,11 +876,13 @@
             grid.innerHTML = products.map(product => `
                 <div class="product-card">
                     <img src="${product.image_url}" alt="${product.name}" class="product-image">
-                    <div class="product-category">${product.category}</div>
-                    <div class="product-name">${product.name}</div>
-                    <div class="product-price">$${product.price.toFixed(2)}</div>
-                    <div class="product-stock">Stock: ${product.stock}</div>
-                    <button class="btn btn-primary" onclick="addToCart(${product.id})">Add to Cart</button>
+                    <div class="product-content">
+                        <div class="product-category">${product.category}</div>
+                        <div class="product-name">${product.name}</div>
+                        <div class="product-price">$${product.price.toFixed(2)}</div>
+                        <div class="product-stock">Available: ${product.stock}</div>
+                        <button class="btn btn-primary" onclick="addToCart(${product.id})">ADD TO COLLECTION</button>
+                    </div>
                 </div>
             `).join('');
         }
@@ -568,7 +907,7 @@
                 const data = await response.json();
                 if (data.success) {
                     loadCart();
-                    showMessage('', 'Added to cart!', 'success');
+                    showMessage('', 'Added to collection', 'success');
                 }
             } catch (error) {
                 console.error('Failed to add to cart', error);
@@ -610,7 +949,7 @@
             const cartTotal = document.getElementById('cartTotal');
 
             if (cart.length === 0) {
-                cartItems.innerHTML = '<p style="text-align:center;padding:2rem;color:#888;">Your cart is empty</p>';
+                cartItems.innerHTML = '<p style="text-align:center;padding:3rem;color:#888;letter-spacing:2px;">YOUR COLLECTION IS EMPTY</p>';
                 cartTotal.innerHTML = '';
                 return;
             }
@@ -619,22 +958,21 @@
                 <div class="cart-item">
                     <img src="${item.image_url}" class="cart-item-image">
                     <div class="cart-item-details">
-                        <div>${item.name}</div>
+                        <div style="font-size:1.2rem;margin-bottom:0.5rem;">${item.name}</div>
                         <div style="color:#888;">Quantity: ${item.quantity}</div>
-                        <div style="color:#4CAF50;">$${item.subtotal.toFixed(2)}</div>
+                        <div style="color:#d4af37;font-size:1.3rem;margin-top:0.5rem;">$${item.subtotal.toFixed(2)}</div>
                     </div>
                 </div>
             `).join('');
 
             const total = cart.reduce((sum, item) => sum + item.subtotal, 0);
-            cartTotal.innerHTML = `Total: <span style="color:#4CAF50;">$${total.toFixed(2)}</span>`;
+            cartTotal.innerHTML = `TOTAL: $${total.toFixed(2)}`;
         }
 
         async function checkout() {
             if (!token || cart.length === 0) return;
 
             try {
-                // Create order
                 const orderResponse = await fetch(API_URL + '/orders', {
                     method: 'POST',
                     headers: { 'Authorization': `Bearer ${token}` }
@@ -649,7 +987,6 @@
                 const orderId = orderData.data.id;
                 const orderTotal = orderData.data.total;
 
-                // Create payment intent
                 const paymentResponse = await fetch(API_URL + '/payment/create-intent', {
                     method: 'POST',
                     headers: {
@@ -665,20 +1002,17 @@
                     return;
                 }
 
-                // Show payment modal
                 document.getElementById('paymentAmount').textContent = orderTotal.toFixed(2);
                 document.getElementById('paymentModal').classList.add('active');
 
-                // Initialize Stripe Elements
                 elements = stripe.elements({ clientSecret: paymentData.data.client_secret });
                 paymentElement = elements.create('payment');
                 paymentElement.mount('#payment-element');
 
-                // Handle payment submission
                 document.getElementById('submitPayment').onclick = async () => {
                     const btn = document.getElementById('submitPayment');
                     btn.disabled = true;
-                    btn.textContent = 'Processing...';
+                    btn.textContent = 'PROCESSING...';
 
                     const { error } = await stripe.confirmPayment({
                         elements,
@@ -688,7 +1022,7 @@
                     if (error) {
                         showMessage('paymentMessage', 'Payment failed: ' + error.message, 'error');
                         btn.disabled = false;
-                        btn.textContent = 'Pay Now';
+                        btn.textContent = 'COMPLETE PURCHASE';
                     } else {
                         showMessage('paymentMessage', 'Payment successful!', 'success');
                         closeModal('paymentModal');
@@ -729,19 +1063,19 @@
             const ordersList = document.getElementById('ordersList');
 
             if (orders.length === 0) {
-                ordersList.innerHTML = '<p style="text-align:center;padding:2rem;color:#888;">No orders yet</p>';
+                ordersList.innerHTML = '<p style="text-align:center;padding:3rem;color:#888;letter-spacing:2px;">NO ORDERS YET</p>';
                 return;
             }
 
             ordersList.innerHTML = orders.map(order => `
                 <div class="order-card">
-                    <div class="order-header">
-                        <div>Order #${order.id}</div>
-                        <div class="status-badge status-${order.status}">${order.status}</div>
+                    <div class="order-header" style="display:flex;justify-content:space-between;margin-bottom:1.5rem;">
+                        <div style="font-size:1.2rem;">ORDER #${order.id}</div>
+                        <div class="status-badge status-${order.status}">${order.status.toUpperCase()}</div>
                     </div>
-                    <div style="color:#888;margin-bottom:0.5rem;">Payment: <span class="status-${order.payment_status || 'pending'}">${order.payment_status || 'pending'}</span></div>
-                    <div style="color:#888;margin-bottom:0.5rem;">${new Date(order.created_at).toLocaleDateString()}</div>
-                    <div style="font-size:1.2rem;color:#4CAF50;">Total: $${order.total.toFixed(2)}</div>
+                    <div style="color:#888;margin-bottom:0.5rem;">Payment: <span class="status-${order.payment_status || 'pending'}">${(order.payment_status || 'pending').toUpperCase()}</span></div>
+                    <div style="color:#888;margin-bottom:1rem;">${new Date(order.created_at).toLocaleDateString()}</div>
+                    <div style="font-size:1.5rem;color:#d4af37;">TOTAL: $${order.total.toFixed(2)}</div>
                 </div>
             `).join('');
         }
@@ -768,8 +1102,8 @@
                 alert.className = type + '-message';
                 alert.textContent = message;
                 alert.style.position = 'fixed';
-                alert.style.top = '100px';
-                alert.style.right = '20px';
+                alert.style.top = '120px';
+                alert.style.right = '40px';
                 alert.style.zIndex = '10000';
                 document.body.appendChild(alert);
                 setTimeout(() => alert.remove(), 3000);

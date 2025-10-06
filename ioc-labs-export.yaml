@@ -1,0 +1,514 @@
+apiVersion: v1
+items:
+- apiVersion: v1
+  kind: Pod
+  metadata:
+    creationTimestamp: "2025-10-05T13:02:45Z"
+    generateName: ioc-labs-backend-79f66f6c5d-
+    generation: 1
+    labels:
+      app: ioc-labs-backend
+      pod-template-hash: 79f66f6c5d
+    name: ioc-labs-backend-79f66f6c5d-p5w6r
+    namespace: ioc-labs
+    ownerReferences:
+    - apiVersion: apps/v1
+      blockOwnerDeletion: true
+      controller: true
+      kind: ReplicaSet
+      name: ioc-labs-backend-79f66f6c5d
+      uid: c06df114-505d-49b9-8422-134804504157
+    resourceVersion: "12910"
+    uid: ab400e4d-fcc2-431f-acd4-a21bd7ebccb6
+  spec:
+    containers:
+    - env:
+      - name: DATABASE_URL
+        valueFrom:
+          secretKeyRef:
+            key: DATABASE_URL
+            name: ioc-labs-secrets
+      - name: PORT
+        value: "8080"
+      image: 570220934078.dkr.ecr.us-east-1.amazonaws.com/ioc-labs-backend:latest
+      imagePullPolicy: Always
+      name: backend
+      ports:
+      - containerPort: 8080
+        protocol: TCP
+      resources:
+        limits:
+          cpu: 500m
+          memory: 1Gi
+        requests:
+          cpu: 250m
+          memory: 512Mi
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: kube-api-access-kfrsn
+        readOnly: true
+    dnsPolicy: ClusterFirst
+    enableServiceLinks: true
+    imagePullSecrets:
+    - name: ecr-secret
+    nodeName: ip-172-31-85-125
+    preemptionPolicy: PreemptLowerPriority
+    priority: 0
+    restartPolicy: Always
+    schedulerName: default-scheduler
+    securityContext: {}
+    serviceAccount: default
+    serviceAccountName: default
+    terminationGracePeriodSeconds: 30
+    tolerations:
+    - effect: NoExecute
+      key: node.kubernetes.io/not-ready
+      operator: Exists
+      tolerationSeconds: 300
+    - effect: NoExecute
+      key: node.kubernetes.io/unreachable
+      operator: Exists
+      tolerationSeconds: 300
+    volumes:
+    - name: kube-api-access-kfrsn
+      projected:
+        defaultMode: 420
+        sources:
+        - serviceAccountToken:
+            expirationSeconds: 3607
+            path: token
+        - configMap:
+            items:
+            - key: ca.crt
+              path: ca.crt
+            name: kube-root-ca.crt
+        - downwardAPI:
+            items:
+            - fieldRef:
+                apiVersion: v1
+                fieldPath: metadata.namespace
+              path: namespace
+  status:
+    conditions:
+    - lastProbeTime: null
+      lastTransitionTime: "2025-10-05T13:02:46Z"
+      status: "True"
+      type: PodReadyToStartContainers
+    - lastProbeTime: null
+      lastTransitionTime: "2025-10-05T13:02:45Z"
+      status: "True"
+      type: Initialized
+    - lastProbeTime: null
+      lastTransitionTime: "2025-10-05T13:02:46Z"
+      status: "True"
+      type: Ready
+    - lastProbeTime: null
+      lastTransitionTime: "2025-10-05T13:02:46Z"
+      status: "True"
+      type: ContainersReady
+    - lastProbeTime: null
+      lastTransitionTime: "2025-10-05T13:02:45Z"
+      status: "True"
+      type: PodScheduled
+    containerStatuses:
+    - allocatedResources:
+        cpu: 250m
+        memory: 512Mi
+      containerID: containerd://9e975aff0c8d4118308852471970f22bcc9b03e71aebe525005024643974f6b9
+      image: 570220934078.dkr.ecr.us-east-1.amazonaws.com/ioc-labs-backend:latest
+      imageID: 570220934078.dkr.ecr.us-east-1.amazonaws.com/ioc-labs-backend@sha256:985475bdf8f410692a3739be889896c6aad4c18d2ac5c5d53e0f34cb9757095b
+      lastState: {}
+      name: backend
+      ready: true
+      resources:
+        limits:
+          cpu: 500m
+          memory: 1Gi
+        requests:
+          cpu: 250m
+          memory: 512Mi
+      restartCount: 0
+      started: true
+      state:
+        running:
+          startedAt: "2025-10-05T13:02:46Z"
+      user:
+        linux:
+          gid: 0
+          supplementalGroups:
+          - 0
+          - 1
+          - 2
+          - 3
+          - 4
+          - 6
+          - 10
+          - 11
+          - 20
+          - 26
+          - 27
+          uid: 0
+      volumeMounts:
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: kube-api-access-kfrsn
+        readOnly: true
+        recursiveReadOnly: Disabled
+    hostIP: 172.31.85.125
+    hostIPs:
+    - ip: 172.31.85.125
+    phase: Running
+    podIP: 10.42.0.20
+    podIPs:
+    - ip: 10.42.0.20
+    qosClass: Burstable
+    startTime: "2025-10-05T13:02:45Z"
+- apiVersion: v1
+  kind: Pod
+  metadata:
+    creationTimestamp: "2025-10-05T13:02:45Z"
+    generateName: ioc-labs-backend-79f66f6c5d-
+    generation: 1
+    labels:
+      app: ioc-labs-backend
+      pod-template-hash: 79f66f6c5d
+    name: ioc-labs-backend-79f66f6c5d-tn5mx
+    namespace: ioc-labs
+    ownerReferences:
+    - apiVersion: apps/v1
+      blockOwnerDeletion: true
+      controller: true
+      kind: ReplicaSet
+      name: ioc-labs-backend-79f66f6c5d
+      uid: c06df114-505d-49b9-8422-134804504157
+    resourceVersion: "12913"
+    uid: 15c16048-6c04-4f5c-9d8d-754614612378
+  spec:
+    containers:
+    - env:
+      - name: DATABASE_URL
+        valueFrom:
+          secretKeyRef:
+            key: DATABASE_URL
+            name: ioc-labs-secrets
+      - name: PORT
+        value: "8080"
+      image: 570220934078.dkr.ecr.us-east-1.amazonaws.com/ioc-labs-backend:latest
+      imagePullPolicy: Always
+      name: backend
+      ports:
+      - containerPort: 8080
+        protocol: TCP
+      resources:
+        limits:
+          cpu: 500m
+          memory: 1Gi
+        requests:
+          cpu: 250m
+          memory: 512Mi
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: kube-api-access-8r27d
+        readOnly: true
+    dnsPolicy: ClusterFirst
+    enableServiceLinks: true
+    imagePullSecrets:
+    - name: ecr-secret
+    nodeName: ip-172-31-85-125
+    preemptionPolicy: PreemptLowerPriority
+    priority: 0
+    restartPolicy: Always
+    schedulerName: default-scheduler
+    securityContext: {}
+    serviceAccount: default
+    serviceAccountName: default
+    terminationGracePeriodSeconds: 30
+    tolerations:
+    - effect: NoExecute
+      key: node.kubernetes.io/not-ready
+      operator: Exists
+      tolerationSeconds: 300
+    - effect: NoExecute
+      key: node.kubernetes.io/unreachable
+      operator: Exists
+      tolerationSeconds: 300
+    volumes:
+    - name: kube-api-access-8r27d
+      projected:
+        defaultMode: 420
+        sources:
+        - serviceAccountToken:
+            expirationSeconds: 3607
+            path: token
+        - configMap:
+            items:
+            - key: ca.crt
+              path: ca.crt
+            name: kube-root-ca.crt
+        - downwardAPI:
+            items:
+            - fieldRef:
+                apiVersion: v1
+                fieldPath: metadata.namespace
+              path: namespace
+  status:
+    conditions:
+    - lastProbeTime: null
+      lastTransitionTime: "2025-10-05T13:02:46Z"
+      status: "True"
+      type: PodReadyToStartContainers
+    - lastProbeTime: null
+      lastTransitionTime: "2025-10-05T13:02:45Z"
+      status: "True"
+      type: Initialized
+    - lastProbeTime: null
+      lastTransitionTime: "2025-10-05T13:02:46Z"
+      status: "True"
+      type: Ready
+    - lastProbeTime: null
+      lastTransitionTime: "2025-10-05T13:02:46Z"
+      status: "True"
+      type: ContainersReady
+    - lastProbeTime: null
+      lastTransitionTime: "2025-10-05T13:02:45Z"
+      status: "True"
+      type: PodScheduled
+    containerStatuses:
+    - allocatedResources:
+        cpu: 250m
+        memory: 512Mi
+      containerID: containerd://fa832aa50270a31c98deb75ffe7c285d4da38b1d94b59ca8a66770f0dd8b11db
+      image: 570220934078.dkr.ecr.us-east-1.amazonaws.com/ioc-labs-backend:latest
+      imageID: 570220934078.dkr.ecr.us-east-1.amazonaws.com/ioc-labs-backend@sha256:985475bdf8f410692a3739be889896c6aad4c18d2ac5c5d53e0f34cb9757095b
+      lastState: {}
+      name: backend
+      ready: true
+      resources:
+        limits:
+          cpu: 500m
+          memory: 1Gi
+        requests:
+          cpu: 250m
+          memory: 512Mi
+      restartCount: 0
+      started: true
+      state:
+        running:
+          startedAt: "2025-10-05T13:02:46Z"
+      user:
+        linux:
+          gid: 0
+          supplementalGroups:
+          - 0
+          - 1
+          - 2
+          - 3
+          - 4
+          - 6
+          - 10
+          - 11
+          - 20
+          - 26
+          - 27
+          uid: 0
+      volumeMounts:
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: kube-api-access-8r27d
+        readOnly: true
+        recursiveReadOnly: Disabled
+    hostIP: 172.31.85.125
+    hostIPs:
+    - ip: 172.31.85.125
+    phase: Running
+    podIP: 10.42.0.19
+    podIPs:
+    - ip: 10.42.0.19
+    qosClass: Burstable
+    startTime: "2025-10-05T13:02:45Z"
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"v1","kind":"Service","metadata":{"annotations":{},"name":"ioc-labs-backend","namespace":"ioc-labs"},"spec":{"ports":[{"nodePort":30080,"port":80,"targetPort":8080}],"selector":{"app":"ioc-labs-backend"},"type":"NodePort"}}
+    creationTimestamp: "2025-10-05T09:32:10Z"
+    name: ioc-labs-backend
+    namespace: ioc-labs
+    resourceVersion: "1676"
+    uid: 95196153-e79b-4ddf-9e78-8f8de4bb8f98
+  spec:
+    clusterIP: 10.43.51.191
+    clusterIPs:
+    - 10.43.51.191
+    externalTrafficPolicy: Cluster
+    internalTrafficPolicy: Cluster
+    ipFamilies:
+    - IPv4
+    ipFamilyPolicy: SingleStack
+    ports:
+    - nodePort: 30080
+      port: 80
+      protocol: TCP
+      targetPort: 8080
+    selector:
+      app: ioc-labs-backend
+    sessionAffinity: None
+    type: NodePort
+  status:
+    loadBalancer: {}
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    annotations:
+      deployment.kubernetes.io/revision: "1"
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"apps/v1","kind":"Deployment","metadata":{"annotations":{},"name":"ioc-labs-backend","namespace":"ioc-labs"},"spec":{"replicas":2,"selector":{"matchLabels":{"app":"ioc-labs-backend"}},"template":{"metadata":{"labels":{"app":"ioc-labs-backend"}},"spec":{"containers":[{"env":[{"name":"DATABASE_URL","valueFrom":{"secretKeyRef":{"key":"DATABASE_URL","name":"ioc-labs-secrets"}}},{"name":"PORT","value":"8080"}],"image":"570220934078.dkr.ecr.us-east-1.amazonaws.com/ioc-labs-backend:latest","name":"backend","ports":[{"containerPort":8080}],"resources":{"limits":{"cpu":"500m","memory":"1024Mi"},"requests":{"cpu":"250m","memory":"512Mi"}}}]}}}}
+    creationTimestamp: "2025-10-05T13:02:45Z"
+    generation: 1
+    name: ioc-labs-backend
+    namespace: ioc-labs
+    resourceVersion: "12919"
+    uid: ebbfa2cf-f4e4-48de-86c7-9ee72d6dd074
+  spec:
+    progressDeadlineSeconds: 600
+    replicas: 2
+    revisionHistoryLimit: 10
+    selector:
+      matchLabels:
+        app: ioc-labs-backend
+    strategy:
+      rollingUpdate:
+        maxSurge: 25%
+        maxUnavailable: 25%
+      type: RollingUpdate
+    template:
+      metadata:
+        creationTimestamp: null
+        labels:
+          app: ioc-labs-backend
+      spec:
+        containers:
+        - env:
+          - name: DATABASE_URL
+            valueFrom:
+              secretKeyRef:
+                key: DATABASE_URL
+                name: ioc-labs-secrets
+          - name: PORT
+            value: "8080"
+          image: 570220934078.dkr.ecr.us-east-1.amazonaws.com/ioc-labs-backend:latest
+          imagePullPolicy: Always
+          name: backend
+          ports:
+          - containerPort: 8080
+            protocol: TCP
+          resources:
+            limits:
+              cpu: 500m
+              memory: 1Gi
+            requests:
+              cpu: 250m
+              memory: 512Mi
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        terminationGracePeriodSeconds: 30
+  status:
+    availableReplicas: 2
+    conditions:
+    - lastTransitionTime: "2025-10-05T13:02:46Z"
+      lastUpdateTime: "2025-10-05T13:02:46Z"
+      message: Deployment has minimum availability.
+      reason: MinimumReplicasAvailable
+      status: "True"
+      type: Available
+    - lastTransitionTime: "2025-10-05T13:02:45Z"
+      lastUpdateTime: "2025-10-05T13:02:46Z"
+      message: ReplicaSet "ioc-labs-backend-79f66f6c5d" has successfully progressed.
+      reason: NewReplicaSetAvailable
+      status: "True"
+      type: Progressing
+    observedGeneration: 1
+    readyReplicas: 2
+    replicas: 2
+    updatedReplicas: 2
+- apiVersion: apps/v1
+  kind: ReplicaSet
+  metadata:
+    annotations:
+      deployment.kubernetes.io/desired-replicas: "2"
+      deployment.kubernetes.io/max-replicas: "3"
+      deployment.kubernetes.io/revision: "1"
+    creationTimestamp: "2025-10-05T13:02:45Z"
+    generation: 1
+    labels:
+      app: ioc-labs-backend
+      pod-template-hash: 79f66f6c5d
+    name: ioc-labs-backend-79f66f6c5d
+    namespace: ioc-labs
+    ownerReferences:
+    - apiVersion: apps/v1
+      blockOwnerDeletion: true
+      controller: true
+      kind: Deployment
+      name: ioc-labs-backend
+      uid: ebbfa2cf-f4e4-48de-86c7-9ee72d6dd074
+    resourceVersion: "12918"
+    uid: c06df114-505d-49b9-8422-134804504157
+  spec:
+    replicas: 2
+    selector:
+      matchLabels:
+        app: ioc-labs-backend
+        pod-template-hash: 79f66f6c5d
+    template:
+      metadata:
+        creationTimestamp: null
+        labels:
+          app: ioc-labs-backend
+          pod-template-hash: 79f66f6c5d
+      spec:
+        containers:
+        - env:
+          - name: DATABASE_URL
+            valueFrom:
+              secretKeyRef:
+                key: DATABASE_URL
+                name: ioc-labs-secrets
+          - name: PORT
+            value: "8080"
+          image: 570220934078.dkr.ecr.us-east-1.amazonaws.com/ioc-labs-backend:latest
+          imagePullPolicy: Always
+          name: backend
+          ports:
+          - containerPort: 8080
+            protocol: TCP
+          resources:
+            limits:
+              cpu: 500m
+              memory: 1Gi
+            requests:
+              cpu: 250m
+              memory: 512Mi
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        terminationGracePeriodSeconds: 30
+  status:
+    availableReplicas: 2
+    fullyLabeledReplicas: 2
+    observedGeneration: 1
+    readyReplicas: 2
+    replicas: 2
+kind: List
+metadata:
+  resourceVersion: ""
