@@ -26,3 +26,5 @@ deploy-temp/
 *.db
 *.sqlite
 infrastructure/stage-3-ecs/secrets.env
+infrastructure/stage-3-ecs/results.json
+infrastructure/stage-3-ecs/results.json
