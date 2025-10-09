@@ -352,20 +352,6 @@ This is a learning project. Still needed for production:
 - ❌ CSRF protection
 - ❌ Input sanitization beyond basic validation
 
-## Addressing Critics
-
-**"This is over-engineering"** — Yes, deliberately. You can't learn the cost of complexity without building complex things and measuring them. The conclusion is that simpler was better for this use case.
-
-**"You're wasting money"** — Used $16-20 of $550 in educational credits (3.6%). That's efficient use of learning resources.
-
-**"You don't know what you're doing"** — The documentation explicitly concludes Stage 4 was overkill. That's judgment, not ignorance. The security fix demonstrates responsiveness to feedback and proper engineering practices.
-
-**"This isn't production-ready"** — Correct. It's explicitly labeled as a learning laboratory. The goal was understanding trade-offs, not building production systems. However, security improvements show a path toward production readiness.
-
-**"Why fix security in a learning project?"** — Because even learning projects teach habits. Writing insecure code as a "learning shortcut" teaches bad patterns. Responding to code review and implementing proper security teaches professional engineering.
-
-The project isn't claiming Kubernetes is better. It's proving it's not better for single applications. That required building it to verify.
-
 ## Contributing
 
 This is primarily a learning project, but contributions that improve documentation, fix bugs, or add educational value are welcome! Please:
