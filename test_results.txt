@@ -1,0 +1,29 @@
+=== RUN   TestHashPassword
+=== RUN   TestHashPassword/valid_password
+=== RUN   TestHashPassword/empty_password
+=== RUN   TestHashPassword/short_password
+--- PASS: TestHashPassword (0.32s)
+    --- PASS: TestHashPassword/valid_password (0.21s)
+    --- PASS: TestHashPassword/empty_password (0.00s)
+    --- PASS: TestHashPassword/short_password (0.11s)
+=== RUN   TestCheckPasswordHash
+=== RUN   TestCheckPasswordHash/correct_password
+=== RUN   TestCheckPasswordHash/incorrect_password
+=== RUN   TestCheckPasswordHash/empty_password
+=== RUN   TestCheckPasswordHash/invalid_hash
+--- PASS: TestCheckPasswordHash (0.40s)
+    --- PASS: TestCheckPasswordHash/correct_password (0.10s)
+    --- PASS: TestCheckPasswordHash/incorrect_password (0.10s)
+    --- PASS: TestCheckPasswordHash/empty_password (0.10s)
+    --- PASS: TestCheckPasswordHash/invalid_hash (0.00s)
+=== RUN   TestValidatePasswordStrength
+=== RUN   TestValidatePasswordStrength/valid_password
+=== RUN   TestValidatePasswordStrength/too_short
+=== RUN   TestValidatePasswordStrength/exactly_8_characters
+--- PASS: TestValidatePasswordStrength (0.00s)
+    --- PASS: TestValidatePasswordStrength/valid_password (0.00s)
+    --- PASS: TestValidatePasswordStrength/too_short (0.00s)
+    --- PASS: TestValidatePasswordStrength/exactly_8_characters (0.00s)
+PASS
+coverage: 93.3% of statements
+ok  	github.com/ibraheemcisse/ioc-labs-ecommerce/internal/auth	0.732s	coverage: 93.3% of statements
