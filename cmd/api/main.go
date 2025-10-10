@@ -4,7 +4,6 @@ import (
 "context"
 "database/sql"
 "encoding/json"
-"fmt"
 "log"
 "net/http"
 "os"
@@ -259,7 +258,13 @@ return
 
 db.Exec("INSERT INTO carts (user_id) VALUES ($1)", userID)
 
-token := fmt.Sprintf("token_%d_%d", userID, time.Now().Unix())
+// Generate JWT token
+token, err := auth.GenerateToken(userID)
+if err != nil {
+zlog.Error().Err(err).Msg("Failed to generate JWT token")
+jsonError(w, http.StatusInternalServerError, "SERVER_ERROR", "Failed to generate authentication token")
+return
+}
 
 zlog.Info().Int("user_id", userID).Str("email", req.Email).Msg("User registered successfully")
 
@@ -310,7 +315,13 @@ jsonError(w, http.StatusUnauthorized, "INVALID_CREDENTIALS", "Invalid email or p
 return
 }
 
-token := fmt.Sprintf("token_%d_%d", userID, time.Now().Unix())
+// Generate JWT token
+token, err := auth.GenerateToken(userID)
+if err != nil {
+zlog.Error().Err(err).Msg("Failed to generate JWT token")
+jsonError(w, http.StatusInternalServerError, "SERVER_ERROR", "Failed to generate authentication token")
+return
+}
 
 zlog.Info().Int("user_id", userID).Str("email", req.Email).Msg("User logged in successfully")
 
@@ -539,24 +550,56 @@ jsonResponse(w, http.StatusOK, map[string]interface{}{
 
 func authMiddleware(next http.Handler) http.Handler {
 return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-token := r.Header.Get("Authorization")
-if token == "" {
-jsonError(w, http.StatusUnauthorized, "UNAUTHORIZED", "Missing token")
+// Get Authorization header
+authHeader := r.Header.Get("Authorization")
+if authHeader == "" {
+jsonError(w, http.StatusUnauthorized, "UNAUTHORIZED", "Missing authorization header")
 return
 }
 
-token = strings.TrimPrefix(token, "Bearer ")
-parts := strings.Split(token, "_")
-if len(parts) < 2 {
-jsonError(w, http.StatusUnauthorized, "INVALID_TOKEN", "Invalid token")
+// Extract token from "Bearer <token>" format
+token := strings.TrimPrefix(authHeader, "Bearer ")
+if token == authHeader {
+// "Bearer " prefix was not found
+jsonError(w, http.StatusUnauthorized, "INVALID_FORMAT", "Authorization header must be in format: Bearer <token>")
 return
 }
 
-userID, _ := strconv.ParseInt(parts[1], 10, 64)
-ctx := context.WithValue(r.Context(), "user_id", userID)
+// Validate JWT token
+claims, err := auth.ValidateToken(token)
+if err != nil {
+// Determine specific error message
+var errorCode, errorMessage string
+switch err {
+case auth.ErrExpiredToken:
+errorCode = "TOKEN_EXPIRED"
+errorMessage = "Token has expired, please login again"
+case auth.ErrTokenMalformed:
+errorCode = "TOKEN_MALFORMED"
+errorMessage = "Token is malformed"
+case auth.ErrInvalidToken, auth.ErrInvalidSignMethod:
+errorCode = "INVALID_TOKEN"
+errorMessage = "Token is invalid"
+default:
+errorCode = "UNAUTHORIZED"
+errorMessage = "Authentication failed"
+}
+
+zlog.Warn().
+Err(err).
+Str("error_code", errorCode).
+Msg("Token validation failed")
+
+jsonError(w, http.StatusUnauthorized, errorCode, errorMessage)
+return
+}
+
+// Add user ID to context
+ctx := context.WithValue(r.Context(), "user_id", int64(claims.UserID))
 next.ServeHTTP(w, r.WithContext(ctx))
 })
 }
+
 
 func corsMiddleware(next http.Handler) http.Handler {
 return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
