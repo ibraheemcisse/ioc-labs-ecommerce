@@ -198,14 +198,14 @@ Insight: Tuning > Scaling.
 journey
     title Security Journey
     section Simplified (POC)
-      Plain-text passwords: 5: Insecure
-      Simple tokens: 5: Insecure
+      Plain-text passwords: 1: Insecure
+      Simple tokens: 1: Insecure
     section Hardening Phase
       Bcrypt hashing: 3: Secure
       JWT tokens: 3: Secure
-      HTTPS ready: 3: Secure
+      HTTPS ready: 4: Secure
     section Outcome
-      Production-grade auth: 1: Achieved
+      Production-grade auth: 5: Achieved
 ```
 
 - Bcrypt: salted, cost factor 10 (~90 ms per hash)
